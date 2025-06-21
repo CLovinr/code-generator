@@ -1,0 +1,97 @@
+<%@
+//设置输出文件
+out="resources/mapper/${moduleName}Mapper.xml"
+%>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="<%=basePackageName%>.dao.<%=moduleName%>Dao">
+
+    <resultMap type="<%=basePackageName%>.entity.<%=moduleName%>" id="<%=moduleName%>Map">
+<%
+for(const column of tableInfo.columns){
+%>
+        <result property="<%=column.name%>" column="<%=utils.getJavaVarName(column.name)%>" jdbcType="<%=utils.getJavaMapperType(column.type)%>"/>
+<%}%>
+    </resultMap>
+
+    <!-- 批量插入 -->
+    <insert id="insertBatch" keyProperty="<%=pk%>" useGeneratedKeys="true">
+        insert into <%=tableInfo.name%>(<%
+            {
+                let isFirst = true;
+                for(const column of tableInfo.otherColumns){
+                    if(isFirst){
+                        isFirst = false;
+                    }else{
+                        out.print(',');
+                    }
+                    out.print(column.name);
+                }
+            }
+        %>)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+        (<%
+            {
+                let isFirst = true;
+                for(const column of tableInfo.otherColumns){
+                    if(isFirst){
+                        isFirst = false;
+                    }else{
+                        out.print(',');
+                    }
+                    out.print('#{entity.'+utils.getJavaVarName(column.name)+'}');
+                }
+            }
+        %>)
+        </foreach>
+    </insert>
+    <!-- 批量插入或按主键更新 -->
+    <insert id="insertOrUpdateBatch" keyProperty="<%=pk%>" useGeneratedKeys="true">
+        insert into <%=tableInfo.name%>(<%
+            {
+                let isFirst = true;
+                for(const column of tableInfo.otherColumns){
+                    if(isFirst){
+                        isFirst = false;
+                    }else{
+                        out.print(',');
+                    }
+                    out.print(column.name);
+                }
+            }
+        %>)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (<%
+            {
+                let isFirst = true;
+                for(const column of tableInfo.otherColumns){
+                    if(isFirst){
+                        isFirst = false;
+                    }else{
+                        out.print(',');
+                    }
+                    out.print('#{entity.'+utils.getJavaVarName(column.name)+'}');
+                }
+            }
+        %>)
+        </foreach>
+        on duplicate key update
+        <%
+            {
+                let isFirst = true;
+                for(const column of tableInfo.otherColumns){
+                    if(isFirst){
+                        isFirst = false;
+                    }else{
+                        out.print(',');
+                    }
+                    out.print(column.name + '=values('+column.name+')');
+                }
+            }
+        %>
+
+    </insert>
+
+</mapper>

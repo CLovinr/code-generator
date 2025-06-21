@@ -1,0 +1,44 @@
+<%@
+//设置输出文件
+out="java/${basePackagePath}/entity/${moduleName}.java"
+%>
+package <%=basePackageName%>.entity;
+
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import java.io.Serializable;
+<%=utils.getJavaTypeImports()%>
+
+<%=utils.tableComment("表实体类")%>
+@SuppressWarnings("serial")
+public class <%=moduleName%> extends Model<<%=moduleName%>> {
+<%
+for(const column of tableInfo.columns){
+%>
+<% if(column.comment) { %>
+    /**
+     * <%=column.comment%>
+     */
+<%}%>
+    private <%=utils.getJavaShortType(column.type)%> <%=utils.getJavaVarName(column.name)%>;
+<%}%>
+
+<%
+for(const column of tableInfo.columns){
+%>
+<%=utils.getJavaSetterGetterMethod(column)%>
+
+<%}%>
+
+<% if(pk) { %>
+    /**
+     * 获取主键值
+     *
+     * @return 主键值
+     */
+    @Override
+    protected Serializable pkVal() {
+        return this.<%=pk%>;
+    }
+<% } %>
+
+}

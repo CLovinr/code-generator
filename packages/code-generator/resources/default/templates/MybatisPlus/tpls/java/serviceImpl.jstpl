@@ -1,0 +1,22 @@
+<%@
+//设置输出文件
+out="java/${basePackagePath}/service/impl/${moduleName}ServiceImpl.java"
+%>
+package <%=basePackageName%>.service.impl;
+
+import org.springframework.stereotype.Service;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import <%=basePackageName%>.dao.<%=moduleName%>Dao;
+import <%=basePackageName%>.entity.<%=moduleName%>;
+import <%=basePackageName%>.service.<%=moduleName%>Service;
+
+<%
+const lowerModuleName = utils.firstLowerCase(moduleName);
+const serviceName = lowerModuleName + 'Service';
+%>
+
+<%=utils.tableComment("表服务实现类")%>
+@Service("<%=serviceName%>")
+public class <%=moduleName%>Impl extends ServiceImpl<<%=moduleName%>Dao, <%=moduleName%>> implements <%=moduleName%>Service {
+
+}

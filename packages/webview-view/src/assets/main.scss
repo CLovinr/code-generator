@@ -1,0 +1,69 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.form-item {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: left;
+  flex-direction: row;
+  gap: 5px;
+  margin-bottom: 10px;
+
+  &.right {
+    justify-content: right;
+  }
+
+  &.no-margin {
+    margin: 0;
+    margin-bottom: 0;
+  }
+
+  label {
+    width: calc(var(--vscode-font-size) * 6);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-foreground);
+    font-weight: bold;
+    text-align: right;
+
+    @for $i from 1 through 10 {
+      &.w#{$i} {
+        width: calc(var(--vscode-font-size) * $i);
+      }
+    }
+
+    &::after {
+      content: "：";
+    }
+  }
+
+  .field {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 5px;
+  }
+
+  &.vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    // label {
+    //   text-align: left;
+    // }
+  }
+}
+
+.vs-button {
+  word-break: keep-all;
+  white-space: nowrap;
+}

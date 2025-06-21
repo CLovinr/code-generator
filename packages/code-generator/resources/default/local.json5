@@ -1,0 +1,23 @@
+{
+  databases: {
+    items: [
+      {
+        enable: true,
+        name: "local-mysql",
+        type: "mysql",
+        initSqls: ["SET NAMES utf8mb4"],
+        options: {
+          host: "localhost",
+          port: 3306,
+          username: "user",
+          password: "password",
+          database: "demo",
+          ssl: false,
+          dialectOptions: {  // https://github.com/sidorares/node-mysql2
+            insecureAuth: false,
+          },
+        },
+      },
+    ],
+  },
+}

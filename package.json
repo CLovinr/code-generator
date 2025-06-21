@@ -1,0 +1,33 @@
+{
+  "name": "code-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:webview": "pnpm -F webview-view dev",
+    "build:webview": "pnpm -F webview-view build",
+    "watch:extension": "pnpm -F code-generator watch",
+    "watch:webview": "pnpm -F webview-view watch",
+    "watch": "npm-run-all -p watch:extension watch:webview",
+    "copy:license": "cpx ./LICENSE.txt ./packages/code-generator/",
+    "clean": "rimraf ./packages/code-generator/dist",
+    "package:extension": "pnpm -F code-generator vsce:package",
+    "package": "pnpm clean && pnpm copy:license && pnpm build:webview && pnpm package:extension"
+  },
+  "keywords": [
+    "code generator",
+    "代码生成器"
+  ],
+  "author": "chenyg",
+  "license": "Mulan PSL v2",
+  "packageManager": "pnpm@10.6.2",
+  "devDependencies": {
+    "chokidar-cli": "^3.0.0",
+    "cpx": "^1.5.0",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^6.0.1"
+  },
+  "dependencies": {
+
+  }
+}

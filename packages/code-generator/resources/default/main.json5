@@ -1,0 +1,98 @@
+{
+  local: "./local.json5",
+  tplName: "MybatisPlus",
+  baseOutDir: "../target/genCODE",
+  encoding: "utf-8",
+  outEncoding: "utf-8",
+  onStart: "\
+    utils.onStart();\
+  ",
+  attrs: {
+    basePackagePath: "com/test/demo",
+    basePackageName: "com.test.demo",
+    author: "chenyg",
+    removePrefix: "test_",
+    typeMappers: [
+      {
+        matchType: "REGEX",
+        columnType: "varchar(\\(\\d+\\))?",
+        javaType: "java.lang.String",
+      },
+      {
+        matchType: "REGEX",
+        columnType: "char(\\(\\d+\\))?",
+        javaType: "java.lang.String",
+      },
+      {
+        matchType: "REGEX",
+        columnType: "(tiny|medium|long)*text",
+        javaType: "java.lang.String",
+      },
+      {
+        matchType: "REGEX",
+        columnType: "decimal(\\(\\d+,\\d+\\))?",
+        javaType: "java.lang.Double",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "integer",
+        javaType: "java.lang.Integer",
+      },
+      {
+        matchType: "REGEX",
+        columnType: "(tiny|small|medium)*int(\\(\\d+\\))?",
+        javaType: "java.lang.Integer",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "int4",
+        javaType: "java.lang.Integer",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "int8",
+        javaType: "java.lang.Long",
+      },
+      {
+        matchType: "REGEX",
+        columnType: "bigint(\\(\\d+\\))?",
+        javaType: "java.lang.Long",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "date",
+        javaType: "java.util.Date",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "datetime",
+        javaType: "java.util.Date",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "timestamp",
+        javaType: "java.util.Date",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "time",
+        javaType: "java.time.LocalTime",
+      },
+      {
+        matchType: "ORDINARY",
+        columnType: "boolean",
+        javaType: "java.lang.Boolean",
+      },
+    ],
+  },
+  ui: {
+    checkOptions: [
+      { text: "Entity", varName: "entity" },
+      { text: "Controller", varName: "controller" },
+    ],
+  },
+  databases: {
+    current: "local-mysql",
+    items: [],
+  },
+}
