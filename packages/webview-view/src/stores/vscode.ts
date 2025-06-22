@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { ref } from "vue";
 
 export const CONFIG_DIR_BASE_NAME = "codeGEN";
 
@@ -9,6 +10,7 @@ declare const acquireVsCodeApi: () => {
 export const useVsCodeApiStore = defineStore("vsCodeApi", () => {
   const vscode =
     typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : undefined;
+  const globalLoading = ref(false);
 
   const listeners: any = {};
   const waitResponseQueue: Array<{
@@ -168,5 +170,5 @@ export const useVsCodeApiStore = defineStore("vsCodeApi", () => {
     }
   }
 
-  return { initReady, request, sendMessage, onMessage };
+  return { initReady, request, sendMessage, onMessage, globalLoading };
 });

@@ -6,6 +6,7 @@ import path from "path";
 import JSON5 from "json5";
 import _ from "lodash";
 
+import { sleep } from "../utils/base";
 import { loadTables, listTableInfo } from "./db";
 import TplScript from "../core/TplScript";
 import { RequestHandler } from "../bridge/RequestHandler";
@@ -77,6 +78,16 @@ export class CodeGenerator {
   }
 
   public async startGenCode(tableNames: string[]) {
+    const result = await vscode.window.showInformationMessage(
+      "是否开始执行代码生成器？",
+      { modal: true },
+      "确认"
+    );
+
+    if (result !== "确认") {
+      throw new Error("已取消！");
+    }
+
     const config = _.cloneDeep(this.config);
     const baseOutDir = TplScript.getPath(
       this.configDir,
@@ -86,7 +97,7 @@ export class CodeGenerator {
     const encoding = config.encoding || "utf-8";
     const outEncoding = config.outEncoding || encoding;
 
-    const includeSuffix = config.includeSuffix || ".include";
+    const includeSuffix = config.includeSuffix || ".jsin";
     const tplSuffix = config.tplSuffix || ".jstpl";
 
     if (includeSuffix === tplSuffix) {
@@ -94,25 +105,33 @@ export class CodeGenerator {
     }
 
     const tplDir = path.join(this.configDir, "templates", config.tplName);
-    const tplPaths = TplScript.listFileRecursive(tplDir);
+    const tplPaths = TplScript.listFileRecursive(tplDir).filter(
+      (o) => path.extname(o) === tplSuffix
+    );
     const onStart = config.onStart?.trim();
 
-    const processLogData: string[] = [];
+    const processLogData: any[] = [];
+    let logId = 0;
+    const pushLog = (type: string, args: any[]) => {
+      const data: string[] = [];
+      for (const s of args) {
+        data.push(String(s));
+        if (s instanceof Error && s.stack) {
+          data.push("\n");
+          data.push(s.stack);
+        }
+      }
+
+      processLogData.push({
+        id: `log-${logId++}`,
+        type,
+        message: data.join(" "),
+      });
+    };
+
     const extraOptions = {
       configDir: this.configDir,
       tplDir,
-      log(...args: any[]) {
-        const data: string[] = [];
-        for (const s of args) {
-          data.push(String(s));
-          if (s instanceof Error && s.stack) {
-            data.push("\n");
-            data.push(s.stack);
-          }
-        }
-
-        processLogData.push(data.join(" "));
-      },
     };
 
     const globalContext = { ...config.attrs };
@@ -120,22 +139,58 @@ export class CodeGenerator {
     globalContext.console = {
       ...console,
       log(...args: any[]) {
-        extraOptions.log.apply(undefined, args);
+        pushLog("log", args);
       },
       debug(...args: any[]) {
-        extraOptions.log.apply(undefined, args);
+        pushLog("debug", args);
       },
       info(...args: any[]) {
-        extraOptions.log.apply(undefined, args);
+        pushLog("info", args);
       },
       warn(...args: any[]) {
-        extraOptions.log.apply(undefined, args);
+        pushLog("warn", args);
       },
       error(...args: any[]) {
-        extraOptions.log.apply(undefined, args);
+        pushLog("error", args);
+      },
+      success(...args: any[]) {
+        pushLog("success", args);
       },
     };
     globalContext.global = globalContext;
+
+    const state = {
+      finish: false,
+      tasks: [] as Array<{
+        name: string;
+        total: number;
+        success: number;
+        failed: number;
+      }>,
+    };
+
+    for (const tableName of tableNames) {
+      const task = {
+        name: tableName,
+        total: tplPaths.length,
+        success: 0,
+        failed: 0,
+      };
+      state.tasks.push(task);
+    }
+
+    const noticeProgress = () => {
+      try {
+        RequestHandler.sendMessage("generating.progress", {
+          state,
+          log: processLogData,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    noticeProgress();
 
     try {
       // 加载脚本
@@ -171,23 +226,26 @@ export class CodeGenerator {
       }
 
       for (const tableName of tableNames) {
-        const tableInfo = await this.listTableInfo(tableName);
+        const task = state.tasks.filter((o) => o.name === tableName)[0];
 
-        globalContext.tableInfo = tableInfo;
-        if (onStart) {
-          const options: vm.RunningScriptOptions = {
-            timeout: 60 * 1000,
-          };
-          const ctx = vm.createContext(globalContext);
-          const script = new vm.Script(onStart);
-          script.runInContext(ctx, options);
-        }
+        try {
+          const tableInfo = await this.listTableInfo(tableName);
 
-        tplPaths.forEach((file) => {
-          if (path.extname(file) === tplSuffix) {
-            extraOptions.log("process template:", file);
+          globalContext.tableInfo = tableInfo;
+          if (onStart) {
+            const options: vm.RunningScriptOptions = {
+              timeout: 60 * 1000,
+            };
+            const ctx = vm.createContext(globalContext);
+            const script = new vm.Script(onStart);
+            script.runInContext(ctx, options);
+          }
 
+          tplPaths.forEach((file) => {
             try {
+              globalContext.console.log("process template:", file);
+              noticeProgress();
+
               const result = TplScript.exeScript(
                 baseOutDir,
                 file,
@@ -200,9 +258,11 @@ export class CodeGenerator {
               const outFile = result.out;
               const content = result.content;
               if (!result.write) {
-                extraOptions.log("not write file:", outFile);
+                globalContext.console.log("not write file:", outFile);
               } else {
-                extraOptions.log("write file:", outFile);
+                globalContext.console.log("write file:", outFile);
+
+                noticeProgress();
 
                 if (!fs.existsSync(path.dirname(outFile))) {
                   fs.mkdirSync(path.dirname(outFile), { recursive: true });
@@ -212,19 +272,49 @@ export class CodeGenerator {
                   encoding: outEncoding,
                 });
               }
+
+              task.success++;
+              noticeProgress();
             } catch (e) {
-              extraOptions.log(`process template error: ${file} `, e);
-              console.error(`process template error: ${file} `, e);
+              task.failed++;
+              globalContext.console.error(
+                `process template error: ${file} `,
+                e
+              );
+              noticeProgress();
             }
+          });
+        } catch (e) {
+          globalContext.console.error(
+            `process item error: table=${tableName} `,
+            e
+          );
+          task.failed = task.total;
+          noticeProgress();
+        } finally {
+          if (task.total === task.success) {
+            globalContext.console.success(`【成功】${tableName}`);
+          } else {
+            globalContext.console.warn(`【未成功】${tableName}`);
           }
-        });
+        }
+
+        await sleep(500);
       }
     } catch (e) {
-      extraOptions.log(e);
+      globalContext.console.error(e);
+      console.error(e);
+    } finally {
+      state.finish = true;
     }
 
+    noticeProgress();
+
+    await sleep(500);
+
     return {
-      log: processLogData.join("\n"),
+      state,
+      log: processLogData,
     };
   }
 }

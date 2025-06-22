@@ -17,7 +17,7 @@
 			"outFiles": [
 				"${workspaceFolder}/packages/code-generator/dist/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "watchScripts"
 		}
 	]
 }

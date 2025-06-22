@@ -10,12 +10,7 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
     private readonly extensionUri: vscode.Uri // 插件所在路径
   ) {
     const disposable = vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-      event.added.forEach(() => {
-        RequestHandler.onDidChangeWorkspaceFolders();
-      });
-      event.removed.forEach(() => {
-        RequestHandler.onDidChangeWorkspaceFolders();
-      });
+      RequestHandler.onDidChangeWorkspaceFolders();
     });
 
     this.context.subscriptions.push(disposable);

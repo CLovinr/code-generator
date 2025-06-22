@@ -14,5 +14,5 @@ node_modules/**
 # dist/**
 # out/**
 tsconfig.json
-esbuild.js
 dev.md
+webpack.config.js

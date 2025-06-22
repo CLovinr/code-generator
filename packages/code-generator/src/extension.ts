@@ -9,17 +9,17 @@ export function activate(context: vscode.ExtensionContext) {
     context.extensionUri
   );
 
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      SidebarViewProvider.viewType, // 页面 ID
-      sidebarViewProvider, // 页面实例
-      {
-        webviewOptions: {
-          retainContextWhenHidden: true, // 界面不可见时仍然保留内容
-        },
-      }
-    )
+  const webviewProvider = vscode.window.registerWebviewViewProvider(
+    SidebarViewProvider.viewType, // 页面 ID
+    sidebarViewProvider, // 页面实例
+    {
+      webviewOptions: {
+        retainContextWhenHidden: true, // 界面不可见时仍然保留内容
+      },
+    }
   );
+
+  context.subscriptions.push(webviewProvider);
 }
 
 // This method is called when your extension is deactivated

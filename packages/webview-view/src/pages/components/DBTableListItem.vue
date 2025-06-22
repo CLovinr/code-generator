@@ -3,7 +3,12 @@
     <div class="right-tool">
       <VsTextField v-model="searchText" maxlength="128" placeholder="搜索" />
 
-      <vscode-button appearance="icon" @click="loadTables" title="刷新">
+      <vscode-button
+        appearance="icon"
+        :disabled="globalLoading"
+        @click="loadTables"
+        title="刷新"
+      >
         <i class="codicon codicon-sync"></i>
       </vscode-button>
     </div>
@@ -17,7 +22,10 @@
             描述
           </vscode-data-grid-cell>
           <vscode-data-grid-cell cell-type="columnheader" grid-column="3">
-            <VsCheckbox v-model="allChecked" :disabled="!!searchText" />
+            <VsCheckbox
+              v-model="allChecked"
+              :disabled="!!searchText || globalLoading"
+            />
           </vscode-data-grid-cell>
         </vscode-data-grid-row>
         <template v-for="item in tableData" :key="item.name">
@@ -29,7 +37,10 @@
               {{ item.comment }}
             </vscode-data-grid-cell>
             <vscode-data-grid-cell grid-column="3">
-              <VsCheckbox v-model="checkedTables[item.name]" />
+              <VsCheckbox
+                v-model="checkedTables[item.name]"
+                :disabled="globalLoading"
+              />
             </vscode-data-grid-cell>
           </vscode-data-grid-row>
         </template>
@@ -39,6 +50,7 @@
 </template>
 <script setup lang="ts">
 import { watch, ref, nextTick } from "vue";
+import { storeToRefs } from "pinia";
 import _ from "lodash";
 import { useVsCodeApiStore } from "@/stores/vscode";
 import { VsCheckbox, VsTextField } from "@/components/vscode";
@@ -57,6 +69,8 @@ const allChecked = ref(false);
 const isAllCheck = ref(true);
 
 const vscodeApiStore = useVsCodeApiStore();
+const { globalLoading } = storeToRefs(vscodeApiStore);
+
 const modelValue = defineModel<string[] | undefined>("modelValue");
 
 if (modelValue.value) {
@@ -80,14 +94,22 @@ const isMatch = (item: any) => {
 };
 
 const loadTables = async () => {
-  const tables = await vscodeApiStore.request("loadDBTables", props.configDir);
-  tableData.value = tables;
+  try {
+    globalLoading.value = true;
+    const tables = await vscodeApiStore.request(
+      "loadDBTables",
+      props.configDir
+    );
+    tableData.value = tables;
 
-  const checked: any = {};
-  tables.forEach((o: any) => {
-    checked[o.name] = checkedTables.value[o.name] || false;
-  });
-  checkedTables.value = checked;
+    const checked: any = {};
+    tables.forEach((o: any) => {
+      checked[o.name] = checkedTables.value[o.name] || false;
+    });
+    checkedTables.value = checked;
+  } finally {
+    globalLoading.value = false;
+  }
 };
 
 watch(() => props.configDir, loadTables, {

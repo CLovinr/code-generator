@@ -12,7 +12,7 @@
 	"typescript.tsc.autoDetect": "off",
 	"cSpell.words": [
 		"browserify",
-		"esbuild",
+		"jsin",
 		"jstpl",
 		"mkdirs",
 		"Mybatis",

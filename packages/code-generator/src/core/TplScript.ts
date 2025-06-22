@@ -48,6 +48,8 @@ function genScript(
     },
   };
 
+  const console = extraOptions.console;
+
   let outPath =
     path.join(
       baseOutDir,
@@ -187,7 +189,7 @@ function genScript(
                   }
 
                   if (!fs.existsSync(includePath)) {
-                    extraOptions.log("include file not exists：" + includePath);
+                    console.warn("include file not exists：" + includePath);
                   } else {
                     const rs = _exeScript(
                       baseOutDir,
@@ -299,7 +301,6 @@ function _exeScript(
   extraOptions: {
     configDir: string;
     tplDir: string;
-    log: any;
   }
 ) {
   const str: any = fs.readFileSync(file, {
@@ -334,7 +335,6 @@ const TPL = {
     extraOptions: {
       configDir: string;
       tplDir: string;
-      log: any;
     }
   ) {
     return _exeScript(

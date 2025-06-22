@@ -23,11 +23,6 @@ body {
     justify-content: right;
   }
 
-  &.no-margin {
-    margin: 0;
-    margin-bottom: 0;
-  }
-
   label {
     width: calc(var(--vscode-font-size) * 6);
     font-size: var(--vscode-font-size);
@@ -66,4 +61,8 @@ body {
 .vs-button {
   word-break: keep-all;
   white-space: nowrap;
+}
+
+.no-margin {
+  margin: 0;
 }

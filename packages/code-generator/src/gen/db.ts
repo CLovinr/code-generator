@@ -8,11 +8,29 @@ import * as vscode from "vscode";
 // import { PostgresDialect } from "@sequelize/postgres";
 // import { SqliteDialect } from "@sequelize/sqlite3";
 // import { Db2Dialect } from "@sequelize/db2";
-import { Sequelize } from "sequelize";
-import "mysql2";
-import "pg";
-import "mariadb";
-import "tedious"; // mssql
+import { Sequelize, Config, Options } from "sequelize";
+
+import mysql2 from "mysql2";
+import pg from "pg";
+import mariadb from "mariadb";
+import tedious from "tedious"; // mssql
+
+Sequelize.beforeInit((config: Config, options: Options) => {
+  // 解决打包后，运行期间找不到依赖的问题
+  if (options.dialect === "mysql") {
+    options.dialectModule = mysql2;
+  } else if (options.dialect === "postgres") {
+    options.dialectModule = pg;
+  } else if (options.dialect === "mariadb") {
+    options.dialectModule = mariadb;
+  } else if (options.dialect === "mssql") {
+    options.dialectModule = tedious;
+  }
+
+  if (!options.dialectModule) {
+    console.warn(`load dialect module failed: ${options.dialect}`);
+  }
+});
 
 async function newSequelize(item: any) {
   if (
@@ -27,6 +45,7 @@ async function newSequelize(item: any) {
     const sequelize = new Sequelize({
       ...item.options,
       dialect: item.type, //'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'db2' | 'snowflake' | 'oracle';
+      config: {},
     });
 
     await sequelize.authenticate();

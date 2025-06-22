@@ -4,7 +4,6 @@
 	"recommendations": [
 		"amodio.tsl-problem-matcher",
 		"dbaeumer.vscode-eslint",
-		"ms-vscode.extension-test-runner",
-		"connor4312.esbuild-problem-matchers"
+		"ms-vscode.extension-test-runner"
 	]
 }
