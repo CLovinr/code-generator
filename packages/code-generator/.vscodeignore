@@ -14,5 +14,4 @@ node_modules/**
 # dist/**
 # out/**
 tsconfig.json
-dev.md
 webpack.config.js

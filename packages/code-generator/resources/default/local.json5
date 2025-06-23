@@ -1,9 +1,7 @@
 {
   databases: {
-    items: [
-      {
-        enable: true,
-        name: "local-mysql",
+    items: {
+      "local-mysql": {
         type: "mysql",
         initSqls: ["SET NAMES utf8mb4"],
         options: {
@@ -13,11 +11,12 @@
           password: "password",
           database: "demo",
           ssl: false,
-          dialectOptions: {  // https://github.com/sidorares/node-mysql2
+          dialectOptions: {
+            // https://github.com/sidorares/node-mysql2
             insecureAuth: false,
           },
         },
       },
-    ],
+    },
   },
 }

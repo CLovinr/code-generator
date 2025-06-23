@@ -1,13 +1,13 @@
 <template>
   <div class="container">
-    <div class="form-item no-margin">
+    <div class="form-item">
       <label class="w6">选择子项目</label>
       <div class="field">
         <VsDropdown
           v-model="projectBaseDir"
           :title="projectBaseDir"
           style="width: 150px"
-          :disabled="noProject"
+          :disabled="noProject || globalLoading"
         >
           <VsOption v-for="path in workspaceFolders" :value="path" :key="path">
             {{ basename(path) }}
@@ -20,20 +20,67 @@
         >
           初始化代码生成器
         </VsButton>
-        <VsButton v-else-if="noProject" disabled>未打开项目</VsButton>
+        <VsButton v-else-if="noProject"> 未打开项目 </VsButton>
+      </div>
+    </div>
+    <div class="form-item">
+      <label class="w6">选择模板</label>
+      <div class="field">
+        <VsDropdown
+          v-model="tplName"
+          :title="tplName"
+          style="width: 150px"
+          :disabled="noProject || globalLoading"
+        >
+          <VsOption v-for="name in allTemplateNames" :value="name" :key="name">
+            {{ name }}
+          </VsOption>
+        </VsDropdown>
+      </div>
+    </div>
+    <div class="form-item no-margin">
+      <label class="w6">保存位置</label>
+      <div class="field" style="flex: 1; display: flex; gap: 5px">
+        <VsTextField
+          v-model="baseOutDir"
+          maxlength="1000"
+          readonly
+          style="flex: 1"
+        />
+        <VsButton
+          appearance="secondary"
+          :disabled="globalLoading || !isInitCodeGenConfig"
+          @click="selectSaveDir"
+        >
+          选择位置
+        </VsButton>
       </div>
     </div>
     <template v-if="isInitCodeGenConfig">
       <VsDivider />
       <div class="form-item">
-        <DBTableListItem v-model="tableNames" :configDir="codeGenConfigDir" />
+        <DBTableListItem
+          ref="refTableListItem"
+          v-model:customerItems="customerItems"
+          v-model="tableNames"
+          :configDir="codeGenConfigDir"
+          @onLoadTable="loadTemplates"
+        />
       </div>
 
       <VsDivider />
       <div class="form-item right no-margin">
         <div style="display: flex; align-items: center; gap: 5px">
           <VsButton
-            :disabled="!tableNames?.length && !globalLoading && !isGenerating"
+            :disabled="globalLoading || isGenerating"
+            @click="addCustomerItem"
+          >
+            <span style="display: flex; align-items: center; width: 3.5em">
+              <i class="codicon codicon-add"></i>添加
+            </span>
+          </VsButton>
+          <VsButton
+            :disabled="!existsGenItems || (globalLoading && !isGenerating)"
             @click="startGenCode"
             style="width: 150px"
           >
@@ -51,8 +98,8 @@
 
       <VsDivider />
       <div class="form-item vertical no-margin">
-        <label>执行日志</label>
-        <div ref="refLoginContainer" class="log-container">
+        <label class="left">执行日志</label>
+        <div ref="refLogContainer" class="log-container">
           <div
             v-for="(item, index) in logMessages"
             :key="item.id"
@@ -105,16 +152,30 @@ globalLoading.value = true;
 
 const workspaceFolders = ref<string[]>([]);
 const projectBaseDir = ref("");
+const allTemplateNames = ref<string[]>([]);
+const tplName = ref("");
+const baseOutDir = ref("");
+
 const codeGenConfigDir = ref("");
 const isInitCodeGenConfig = ref(false);
 const noProject = computed(() => workspaceFolders.value.length === 0);
+const customerItems = ref<any[]>([]);
 const tableNames = ref<string[]>([]);
+const refTableListItem = ref();
+
+const existsGenItems = computed(
+  () =>
+    !!(
+      tableNames.value?.length ||
+      customerItems.value?.filter((o) => o.checked).length
+    )
+);
 
 const logMessages = ref<any[]>([]);
 const isGenerating = ref(false);
 const generatingPercent = ref("");
 const generateResultInfo = ref("");
-const refLoginContainer = ref();
+const refLogContainer = ref();
 
 const checkIsInit = async () => {
   try {
@@ -126,6 +187,7 @@ const checkIsInit = async () => {
         "isInitCodeGenConfig",
         configDir
       );
+
       isInitCodeGenConfig.value = init;
       codeGenConfigDir.value = configDir;
     } else {
@@ -133,7 +195,26 @@ const checkIsInit = async () => {
       isInitCodeGenConfig.value = false;
     }
   } finally {
+    loadTemplates();
     globalLoading.value = false;
+  }
+};
+
+const loadTemplates = async () => {
+  const result: any = await vscodeApiStore.request(
+    "getTemplateNames",
+    codeGenConfigDir.value
+  );
+  allTemplateNames.value = result.tplNames as string[];
+  tplName.value = result.current;
+  baseOutDir.value = result.baseOutDir;
+
+  if (tplName.value && !allTemplateNames.value.includes(tplName.value)) {
+    tplName.value = "";
+  }
+
+  if (!tplName.value) {
+    tplName.value = allTemplateNames.value?.[0];
   }
 };
 
@@ -150,8 +231,16 @@ vscodeApiStore.onMessage("vscodeInitReady", (data) => {
 
 vscodeApiStore.onMessage(["folders.list", "folders.change"], (data) => {
   workspaceFolders.value = data.folders as string[];
+
+  if (
+    projectBaseDir.value &&
+    !workspaceFolders.value.includes(projectBaseDir.value)
+  ) {
+    projectBaseDir.value = "";
+  }
+
   if (!projectBaseDir.value) {
-    projectBaseDir.value = data.folders?.[0];
+    projectBaseDir.value = workspaceFolders.value?.[0];
   } else {
     checkIsInit();
   }
@@ -197,15 +286,46 @@ const updateGenerateResultInfo = (state: any) => {
   generateResultInfo.value = `总数:${total} | 成功数:${success} | 部分成功数:${partialSuccess} | 失败数:${failed}`;
 };
 
+const selectSaveDir = async () => {
+  const dir = await vscodeApiStore.request(
+    "selectSaveDir",
+    codeGenConfigDir.value
+  );
+  baseOutDir.value = dir;
+};
+
 const startGenCode = async () => {
+  if (isGenerating.value) {
+    await vscodeApiStore.request("stopGenCode");
+    return;
+  } else if (!tplName.value) {
+    await vscodeApiStore.request("showWarningMessage", "未选择模板！");
+    return;
+  } else if (!baseOutDir.value) {
+    await vscodeApiStore.request("showWarningMessage", "未设置保存位置！");
+    return;
+  }
+
   try {
     globalLoading.value = true;
     isGenerating.value = true;
     generateResultInfo.value = "";
 
+    const theCustomerItems: any[] = [];
+    if (customerItems.value) {
+      for (const item of customerItems.value) {
+        theCustomerItems.push({
+          ...item,
+        });
+      }
+    }
+
     const result = await vscodeApiStore.request("startGenCode", {
       configDir: codeGenConfigDir.value,
       tables: [...tableNames.value],
+      customerItems: theCustomerItems,
+      tplName: tplName.value,
+      baseOutDir: baseOutDir.value,
     });
 
     logMessages.value = result.log;
@@ -214,6 +334,7 @@ const startGenCode = async () => {
   } finally {
     isGenerating.value = false;
     globalLoading.value = false;
+    generatingPercent.value = "";
   }
 };
 
@@ -260,14 +381,18 @@ const getLogColor = (item: any) => {
 
 watch(logMessages, () => {
   nextTick(() => {
-    refLoginContainer.value.scrollTop = refLoginContainer.value.scrollHeight;
+    refLogContainer.value.scrollTop = refLogContainer.value.scrollHeight;
   });
 });
+
+const addCustomerItem = () => {
+  refTableListItem.value.addCustomerItem();
+};
 </script>
 
 <style scoped lang="scss">
 .container {
-  padding: 10px;
+  padding: 5px 10px;
   width: 100%;
   min-width: 450px;
 }
@@ -278,12 +403,12 @@ watch(logMessages, () => {
 }
 
 .log-container {
-  max-height: 350px;
+  height: calc(100vh - 610px);
   width: 100%;
   overflow: auto;
 
   .log-item {
-    min-width: 450px;
+    min-width: 500px;
     display: flex;
     vertical-align: top;
 

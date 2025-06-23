@@ -39,6 +39,10 @@ body {
     &::after {
       content: "：";
     }
+
+    &.left {
+      text-align: left;
+    }
   }
 
   .field {

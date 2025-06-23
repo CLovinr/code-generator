@@ -1,6 +1,8 @@
 <template>
   <div class="db-table-list">
     <div class="right-tool">
+      <div v-if="!!modelValue?.length">已选数: {{ modelValue?.length }}</div>
+
       <VsTextField v-model="searchText" maxlength="128" placeholder="搜索" />
 
       <vscode-button
@@ -12,8 +14,8 @@
         <i class="codicon codicon-sync"></i>
       </vscode-button>
     </div>
-    <div class="table-grid">
-      <vscode-data-grid aria-label="Basic" grid-template-columns="1fr 2fr 60px">
+    <div ref="refDataGrid" class="table-grid">
+      <vscode-data-grid aria-label="Basic" grid-template-columns="5fr 6fr 60px">
         <vscode-data-grid-row row-type="header">
           <vscode-data-grid-cell cell-type="columnheader" grid-column="1">
             表名称
@@ -28,12 +30,44 @@
             />
           </vscode-data-grid-cell>
         </vscode-data-grid-row>
+        <template v-for="item in customerItems" :key="item.id">
+          <vscode-data-grid-row v-if="isMatch(item)">
+            <vscode-data-grid-cell grid-column="1">
+              <VsTextField
+                v-model="item.name"
+                maxlength="128"
+                :disabled="globalLoading"
+                style="width: 100%"
+              >
+                <i slot="start" class="codicon codicon-symbol-field" />
+              </VsTextField>
+            </vscode-data-grid-cell>
+            <vscode-data-grid-cell grid-column="2">
+              <VsTextField
+                v-model="item.comment"
+                maxlength="512"
+                :disabled="globalLoading"
+                style="width: 100%"
+              >
+                <i slot="start" class="codicon codicon-output" />
+              </VsTextField>
+            </vscode-data-grid-cell>
+            <vscode-data-grid-cell grid-column="3">
+              <VsCheckbox
+                v-model="item.checked"
+                :disabled="!item.name || globalLoading"
+              />
+            </vscode-data-grid-cell>
+          </vscode-data-grid-row>
+        </template>
         <template v-for="item in tableData" :key="item.name">
           <vscode-data-grid-row v-if="isMatch(item)">
             <vscode-data-grid-cell grid-column="1">
+              <i class="codicon codicon-table" style="margin-right: 5px" />
               {{ item.name }}
             </vscode-data-grid-cell>
             <vscode-data-grid-cell grid-column="2">
+              <i class="codicon codicon-output" style="margin-right: 5px" />
               {{ item.comment }}
             </vscode-data-grid-cell>
             <vscode-data-grid-cell grid-column="3">
@@ -62,25 +96,74 @@ const props = defineProps({
   },
 });
 
+const vscodeApiStore = useVsCodeApiStore();
+const { globalLoading } = storeToRefs(vscodeApiStore);
+
 const searchText = ref("");
 const tableData = ref<any[]>([]);
 const checkedTables = ref<any>({});
 const allChecked = ref(false);
-const isAllCheck = ref(true);
+const isAllCheckProcessing = ref(false);
 
-const vscodeApiStore = useVsCodeApiStore();
-const { globalLoading } = storeToRefs(vscodeApiStore);
-
-const modelValue = defineModel<string[] | undefined>("modelValue");
-
-if (modelValue.value) {
-  const obj: any = {};
-  for (const name of modelValue.value) {
-    obj[name] = true;
-  }
-
-  checkedTables.value = obj;
+interface CustomerItem {
+  id: any;
+  name?: string;
+  comment?: string;
+  checked: boolean;
 }
+
+const customerItems = ref<CustomerItem[]>([]);
+
+const refDataGrid = ref();
+
+const emit = defineEmits(["onLoadTable"]);
+const modelValue = defineModel<string[] | undefined>("modelValue");
+const customerItemsValue = defineModel<CustomerItem[] | undefined>(
+  "customerItems"
+);
+
+watch(
+  modelValue,
+  () => {
+    const obj: any = {};
+    if (modelValue.value) {
+      for (const name of modelValue.value) {
+        obj[name] = true;
+      }
+    }
+
+    checkedTables.value = {
+      ...checkedTables.value,
+      ...obj,
+    };
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
+
+watch(
+  customerItemsValue,
+  () => {
+    const items: CustomerItem[] = [];
+    if (customerItemsValue.value) {
+      for (const item of customerItemsValue.value) {
+        items.push({
+          ...item,
+        });
+      }
+    }
+
+    if (!_.isEqual(items, customerItems.value)) {
+      customerItems.value = items;
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
 
 const isMatch = (item: any) => {
   if (searchText.value === "" || _.isNil(searchText.value)) {
@@ -109,15 +192,12 @@ const loadTables = async () => {
     checkedTables.value = checked;
   } finally {
     globalLoading.value = false;
+    emit("onLoadTable");
   }
 };
 
-watch(() => props.configDir, loadTables, {
-  immediate: true,
-});
-
 watch(allChecked, (check) => {
-  if (!isAllCheck.value) {
+  if (isAllCheckProcessing.value) {
     return;
   }
 
@@ -158,8 +238,9 @@ watch(
     const N = Object.keys(checkedTables.value).length;
 
     try {
-      isAllCheck.value = false;
+      isAllCheckProcessing.value = true;
       if (checkedCount !== N) {
+        // 没有全部选中
         if (allChecked.value) {
           allChecked.value = false;
         }
@@ -174,20 +255,49 @@ watch(
       }
     } finally {
       nextTick(() => {
-        isAllCheck.value = true;
+        isAllCheckProcessing.value = false;
       });
     }
   },
   {
     deep: true,
-    immediate: true,
   }
 );
+
+watch(
+  customerItems,
+  () => {
+    customerItemsValue.value = customerItems.value;
+  },
+  {
+    deep: true,
+  }
+);
+
+watch(() => props.configDir, loadTables, {
+  immediate: true,
+});
+
+const itemIdBase = `customer-${new Date().getTime()}`;
+let itemId = 0;
+const addCustomerItem = () => {
+  refDataGrid.value.scrollTop = 0; // refDataGrid.value.scrollHeight;
+  customerItems.value.push({
+    id: `${itemIdBase}:${itemId++}`,
+    checked: false,
+    name: undefined,
+    comment: undefined,
+  });
+};
+
+defineExpose({
+  addCustomerItem,
+});
 </script>
 <style lang="scss" scoped>
 .db-table-list {
   width: 100%;
-  max-width: 700px;
+  max-width: 1000px;
   max-height: 350px;
   display: flex;
   flex-direction: column;
@@ -198,7 +308,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: right;
-  gap: 5px;
+  gap: 20px;
 }
 
 .table-grid {

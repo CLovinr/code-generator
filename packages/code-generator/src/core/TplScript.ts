@@ -14,11 +14,11 @@ function doListFileRecursive(pathStr: string, list: string[]) {
   if (!fs.existsSync(pathStr)) {
     return;
   }
-  let stat = fs.statSync(pathStr);
+  const stat = fs.statSync(pathStr);
   if (stat.isFile()) {
     list.push(pathStr);
   } else {
-    let files = fs.readdirSync(pathStr);
+    const files = fs.readdirSync(pathStr);
     files.forEach((item) =>
       doListFileRecursive(path.join(pathStr, item), list)
     );

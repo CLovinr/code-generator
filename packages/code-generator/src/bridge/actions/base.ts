@@ -35,6 +35,13 @@ export function registerActions(
     }
   });
 
+  onAction("getTemplateNames", async (data) => {
+    const configDir: string = data as string;
+    const generator = new CodeGenerator(context, configDir);
+
+    return await generator.getTemplateData();
+  });
+
   onAction("initCodeGenConfig", async (data: any) => {
     const result = await vscode.window.showInformationMessage(
       "是否初始化代码生成器？",
@@ -72,12 +79,136 @@ export function registerActions(
     return await generator.loadTables();
   });
 
+  let currentGeneratingGen: CodeGenerator | undefined;
+
   onAction("startGenCode", async (data: any) => {
+    if (currentGeneratingGen?.generating) {
+      const msg = "代码生成器已在运行中！";
+      vscode.window.showWarningMessage(msg);
+      throw new Error(msg);
+    }
+
+    const result = await vscode.window.showInformationMessage(
+      "是否开始执行代码生成器？",
+      { modal: true },
+      "确认"
+    );
+
+    if (result !== "确认") {
+      throw new Error("已取消！");
+    }
+
     const configDir: string = data.configDir;
+    const tplName: string = data.tplName;
+    const baseOutDir: string = data.baseOutDir?.replace(/\\/g, "/");
+
+    const customerItems: Array<{
+      id: any;
+      name: string;
+      comment?: string;
+    }> = data.customerItems;
     const tables: string[] = data.tables;
+
+    const items: Array<{
+      id: any;
+      name: string;
+      comment?: string;
+      isTable: boolean;
+    }> = [];
+
+    for (const item of customerItems) {
+      items.push({
+        ...item,
+        isTable: false,
+      });
+    }
+
+    for (const tableName of tables) {
+      items.push({
+        id: `table:${tableName}`,
+        name: tableName,
+        isTable: true,
+      });
+    }
+
     const generator = new CodeGenerator(context, configDir);
-    const result = await generator.startGenCode(tables);
-    vscode.window.showInformationMessage(`代码生成器已执行结束！`);
-    return result;
+    try {
+      currentGeneratingGen = generator;
+      const result = await generator.startGenCode(
+        {
+          tplName,
+          baseOutDir,
+        },
+        items
+      );
+      vscode.window.showInformationMessage(`代码生成器已执行结束！`);
+      return result;
+    } finally {
+      currentGeneratingGen = undefined;
+    }
+  });
+
+  onAction("stopGenCode", async () => {
+    if (currentGeneratingGen?.generating) {
+      const result = await vscode.window.showInformationMessage(
+        "是否终止运行代码生成器？",
+        { modal: true },
+        "确认"
+      );
+
+      if (result === "确认") {
+        await currentGeneratingGen.stopGenCode();
+      }
+    }
+  });
+
+  onAction("selectSaveDir", (data) => {
+    const configDir = data as string;
+    const generator = new CodeGenerator(context, configDir);
+
+    return new Promise((resolve, reject) => {
+      const options: vscode.OpenDialogOptions = {
+        canSelectFolders: true, // 允许选择文件夹
+        canSelectFiles: false, // 禁止选择文件
+        canSelectMany: false, // 禁止多选
+        openLabel: "选择文件夹", // 按钮文本
+        title: "选择保存位置", // 对话框标题
+        defaultUri: vscode.Uri.file(generator.getAbsBaseOutDir()),
+      };
+
+      vscode.window.showOpenDialog(options).then((uris) => {
+        if (uris && uris.length > 0) {
+          const folderPath = uris[0].fsPath.replace(/\\/g, "/");
+
+          const relPath = path
+            .relative(configDir, folderPath)
+            .replace(/\\/g, "/");
+
+          let finalPath = folderPath;
+
+          if (relPath.startsWith(".")) {
+            if (
+              (relPath.startsWith("../") || relPath === "..") &&
+              !relPath.startsWith("../../../")
+            ) {
+              finalPath = relPath.endsWith("..") ? relPath + "/" : relPath;
+            } else {
+              finalPath = folderPath;
+            }
+          } else if (relPath.startsWith("/") || relPath.indexOf(":") >= 0) {
+            finalPath = folderPath;
+          } else {
+            finalPath = "./" + relPath;
+          }
+
+          generator.setCurrentJsonItem({
+            baseOutDir: finalPath,
+          });
+          resolve(finalPath);
+        } else {
+          reject(new Error("用户取消了选择"));
+        }
+      });
+    });
   });
 }

@@ -1,3 +1,4 @@
+// https://github.com/microsoft/vscode-webview-ui-toolkit
 import {
   provideVSCodeDesignSystem,
   vsCodeButton,

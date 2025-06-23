@@ -1,12 +1,39 @@
 {
   local: "./local.json5",
   tplName: "MybatisPlus",
-  baseOutDir: "../target/genCODE",
+  baseOutDir: "./code-out",
   encoding: "utf-8",
   outEncoding: "utf-8",
   onStart: "\
     utils.onStart();\
   ",
+  ui: {
+    checkOptions: [
+      { text: "Entity", varName: "entity" },
+      { text: "Controller", varName: "controller" },
+    ],
+  },
+  databases: {
+    current: "local-mysql",
+    items: {
+      "mysql01": {
+        type: "mysql",
+        initSqls: ["SET NAMES utf8mb4"],
+        options: {
+          host: "localhost",
+          port: 3306,
+          username: "user",
+          password: "password",
+          database: "demo",
+          ssl: false,
+          dialectOptions: {
+            // https://github.com/sidorares/node-mysql2
+            insecureAuth: false,
+          },
+        },
+      },
+    },
+  },
   attrs: {
     basePackagePath: "com/test/demo",
     basePackageName: "com.test.demo",
@@ -84,15 +111,5 @@
         javaType: "java.lang.Boolean",
       },
     ],
-  },
-  ui: {
-    checkOptions: [
-      { text: "Entity", varName: "entity" },
-      { text: "Controller", varName: "controller" },
-    ],
-  },
-  databases: {
-    current: "local-mysql",
-    items: [],
   },
 }

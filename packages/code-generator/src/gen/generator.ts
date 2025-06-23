@@ -15,10 +15,12 @@ export class CodeGenerator {
   private context: vscode.ExtensionContext;
   private configDir: string;
   private config: any;
+  private _generating: boolean;
 
   public constructor(context: vscode.ExtensionContext, configDir: string) {
     this.context = context;
     this.configDir = configDir;
+    this._generating = false;
     this.init();
   }
 
@@ -42,28 +44,84 @@ export class CodeGenerator {
       }
     }
 
-    const currentPath = path.join(this.configDir, "local.current.json");
-    if (fs.existsSync(currentPath)) {
-      const localContent = fs.readFileSync(currentPath, "utf8");
-      const localConfig = JSON5.parse(localContent);
-      config = _.merge(config, localConfig);
-    }
+    config = _.merge(config, this.getCurrentJsonConfig());
 
     this.config = config;
   }
 
+  private get currentJsonFile() {
+    const currentPath = path.join(this.configDir, "local.current.json");
+    return currentPath;
+  }
+
+  public getCurrentJsonConfig(encoding: BufferEncoding = "utf-8") {
+    let currentJson = {};
+    try {
+      const currentJsonPath = this.currentJsonFile;
+      if (fs.existsSync(currentJsonPath)) {
+        const content = fs.readFileSync(currentJsonPath, encoding);
+        const jsonConfig = JSON.parse(content);
+        currentJson = jsonConfig || {};
+      }
+    } catch (e) {
+      console.error("load current json error: ", e);
+    }
+
+    return currentJson;
+  }
+
+  public setCurrentJsonItem(
+    subConfig: any,
+    encoding: BufferEncoding = "utf-8"
+  ) {
+    const jsonConfig = _.merge(this.getCurrentJsonConfig(), subConfig || {});
+    this.saveCurrentJsonConfig(jsonConfig, encoding);
+  }
+
+  public saveCurrentJsonConfig(
+    currentJson: any,
+    encoding: BufferEncoding = "utf-8"
+  ) {
+    try {
+      const content = JSON.stringify(currentJson || {});
+      const currentJsonPath = this.currentJsonFile;
+      fs.writeFileSync(currentJsonPath, content, {
+        encoding: encoding,
+      });
+    } catch (e) {
+      console.error("save current json error: ", e);
+    }
+  }
+
   private getCurrentDBItem() {
     const currentName = this.config.databases.current;
-    const dbConfigItem = this.config.databases.items.filter(
-      (o: any) => o.name === currentName && o.enable !== false
-    )[0];
+    const dbConfigItem = this.config.databases.items?.[currentName];
 
     if (!dbConfigItem) {
+      vscode.window.showErrorMessage(`无法获取数据库连接配置：${currentName}`);
       throw new Error(`Not found database config item: ${currentName}`);
     }
 
     const item = _.cloneDeep(dbConfigItem);
     return item;
+  }
+
+  public async getTemplateData() {
+    const templatesDir = path.join(this.configDir, "templates");
+    const files = fs.readdirSync(templatesDir);
+    const tplNames: string[] = [];
+    files.forEach((name) => {
+      const stat = fs.statSync(path.join(templatesDir, name));
+      if (stat.isDirectory()) {
+        tplNames.push(name);
+      }
+    });
+
+    return {
+      tplNames,
+      current: this.config.tplName,
+      baseOutDir: this.config.baseOutDir,
+    };
   }
 
   public async loadTables() {
@@ -77,22 +135,60 @@ export class CodeGenerator {
     return await listTableInfo(this.context, item, tableName);
   }
 
-  public async startGenCode(tableNames: string[]) {
-    const result = await vscode.window.showInformationMessage(
-      "是否开始执行代码生成器？",
-      { modal: true },
-      "确认"
-    );
+  public get generating() {
+    return this._generating;
+  }
 
-    if (result !== "确认") {
-      throw new Error("已取消！");
+  public async stopGenCode() {
+    this._generating = false;
+  }
+
+  public getAbsBaseOutDir() {
+    const baseOutDir = this.config.baseOutDir || "../target/genCODE";
+    const absBaseOutDir = TplScript.getPath(this.configDir, baseOutDir);
+    return absBaseOutDir;
+  }
+
+  public async startGenCode(
+    options: {
+      tplName?: string;
+      baseOutDir?: string;
+    },
+    items: Array<{
+      id: any;
+      name: string;
+      comment?: string;
+      isTable: boolean;
+    }>
+  ) {
+    try {
+      this._generating = true;
+      await this.doStartGenCode(options, items);
+    } finally {
+      this._generating = false;
     }
+  }
 
+  private async doStartGenCode(
+    options: {
+      tplName?: string;
+      baseOutDir?: string;
+    },
+    items: Array<{
+      id: any;
+      name: string;
+      comment?: string;
+      isTable: boolean;
+    }>
+  ) {
     const config = _.cloneDeep(this.config);
-    const baseOutDir = TplScript.getPath(
-      this.configDir,
-      config.baseOutDir || "../target/genCODE"
-    );
+
+    const baseOutDir =
+      options.baseOutDir || config.baseOutDir || "../target/genCODE";
+
+    const absBaseOutDir = TplScript.getPath(this.configDir, baseOutDir);
+
+    const finalTplName = options.tplName || config.tplName;
 
     const encoding = config.encoding || "utf-8";
     const outEncoding = config.outEncoding || encoding;
@@ -104,11 +200,25 @@ export class CodeGenerator {
       throw new Error("unexpected: includeSuffix == tplSuffix");
     }
 
-    const tplDir = path.join(this.configDir, "templates", config.tplName);
+    const tplDir = path.join(this.configDir, "templates", finalTplName);
     const tplPaths = TplScript.listFileRecursive(tplDir).filter(
       (o) => path.extname(o) === tplSuffix
     );
+
+    if (!tplPaths.length) {
+      vscode.window.showWarningMessage("未找到模板文件");
+      throw new Error("未找到模板文件");
+    }
+
     const onStart = config.onStart?.trim();
+
+    this.setCurrentJsonItem(
+      {
+        tplName: finalTplName,
+        baseOutDir,
+      },
+      encoding
+    );
 
     const processLogData: any[] = [];
     let logId = 0;
@@ -162,16 +272,16 @@ export class CodeGenerator {
     const state = {
       finish: false,
       tasks: [] as Array<{
-        name: string;
+        id: any;
         total: number;
         success: number;
         failed: number;
       }>,
     };
 
-    for (const tableName of tableNames) {
+    for (const item of items) {
       const task = {
-        name: tableName,
+        id: item.id,
         total: tplPaths.length,
         success: 0,
         failed: 0,
@@ -201,6 +311,10 @@ export class CodeGenerator {
 
           let scriptCodeQueue: string[] = ["const module={};"];
           files.forEach((name) => {
+            if (!this._generating) {
+              throw new Error("已终止");
+            }
+
             const filePath = path.join(scriptsDir, name);
             if (filePath.endsWith(".js") && fs.statSync(filePath).isFile()) {
               const varName = name.substring(0, name.length - 3);
@@ -220,16 +334,30 @@ export class CodeGenerator {
           const ctx = vm.createContext(globalContext);
           const script = new vm.Script(scriptCodeQueue.join("\n"));
           script.runInContext(ctx, options);
+
+          if (!this._generating) {
+            throw new Error("已终止");
+          }
         }
 
         delete globalContext.require;
       }
 
-      for (const tableName of tableNames) {
-        const task = state.tasks.filter((o) => o.name === tableName)[0];
+      for (const item of items) {
+        if (!this._generating) {
+          throw new Error("已终止");
+        }
+
+        const task = state.tasks.filter((o) => o.id === item.id)[0];
 
         try {
-          const tableInfo = await this.listTableInfo(tableName);
+          const tableInfo = item.isTable
+            ? await this.listTableInfo(item.name)
+            : {
+                name: item.name,
+                comment: item.comment,
+                columns: [],
+              };
 
           globalContext.tableInfo = tableInfo;
           if (onStart) {
@@ -242,12 +370,16 @@ export class CodeGenerator {
           }
 
           tplPaths.forEach((file) => {
+            if (!this._generating) {
+              throw new Error("已终止");
+            }
+
             try {
               globalContext.console.log("process template:", file);
               noticeProgress();
 
               const result = TplScript.exeScript(
-                baseOutDir,
+                absBaseOutDir,
                 file,
                 globalContext,
                 includeSuffix,
@@ -286,20 +418,20 @@ export class CodeGenerator {
           });
         } catch (e) {
           globalContext.console.error(
-            `process item error: table=${tableName} `,
+            `process item error: table or module=${item.name} `,
             e
           );
           task.failed = task.total;
           noticeProgress();
         } finally {
           if (task.total === task.success) {
-            globalContext.console.success(`【成功】${tableName}`);
+            globalContext.console.success(`【成功】${item.name}`);
           } else {
-            globalContext.console.warn(`【未成功】${tableName}`);
+            globalContext.console.warn(`【未成功】${item.name}`);
           }
         }
 
-        await sleep(500);
+        await sleep(200);
       }
     } catch (e) {
       globalContext.console.error(e);
