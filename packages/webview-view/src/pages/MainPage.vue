@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="form-item">
-      <label class="w6">选择子项目</label>
+      <label class="w6">选择项目</label>
       <div class="field">
         <VsDropdown
           v-model="projectBaseDir"
@@ -403,7 +403,7 @@ const addCustomerItem = () => {
 }
 
 .log-container {
-  height: calc(100vh - 610px);
+  height: calc(100vh - 580px);
   width: 100%;
   overflow: auto;
 
