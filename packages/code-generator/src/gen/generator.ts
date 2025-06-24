@@ -88,9 +88,17 @@ export class CodeGenerator {
 
   public setCurrentJsonItem(
     subConfig: any,
-    encoding: BufferEncoding = "utf-8"
+    encoding: BufferEncoding = "utf-8",
+    overwrite: boolean = false
   ) {
-    const jsonConfig = _.merge(this.getCurrentJsonConfig(), subConfig || {});
+    let jsonConfig: any = this.getCurrentJsonConfig();
+    if (!overwrite) {
+      jsonConfig = _.merge(jsonConfig, subConfig);
+    } else {
+      for (const key in subConfig) {
+        jsonConfig[key] = subConfig[key];
+      }
+    }
     this.saveCurrentJsonConfig(jsonConfig, encoding);
   }
 
@@ -136,6 +144,7 @@ export class CodeGenerator {
 
     const uiParams = this.config.ui?.params || [];
     const uiValues = this.config.ui.values || {};
+    const customerItems = this.config.customerItems || [];
 
     return {
       templates,
@@ -143,6 +152,7 @@ export class CodeGenerator {
       baseOutDir: this.config.baseOutDir,
       uiParams,
       uiValues,
+      customerItems,
     };
   }
 
@@ -183,6 +193,7 @@ export class CodeGenerator {
       tplName?: string;
       baseOutDir?: string;
       uiValues?: any;
+      customerItems?: any;
     },
     items: Array<{
       id: any;
@@ -204,6 +215,7 @@ export class CodeGenerator {
       tplName?: string;
       baseOutDir?: string;
       uiValues?: any;
+      customerItems?: any;
     },
     items: Array<{
       id: any;
@@ -252,8 +264,10 @@ export class CodeGenerator {
         ui: {
           values: finalUiValues,
         },
+        customerItems: options.customerItems,
       },
-      encoding
+      encoding,
+      true
     );
 
     const processLogData: any[] = [];

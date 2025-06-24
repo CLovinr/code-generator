@@ -107,6 +107,7 @@ export function registerActions(
       id: any;
       name: string;
       comment?: string;
+      checked: boolean;
     }> = data.customerItems;
     const tables: string[] = data.tables;
 
@@ -118,10 +119,12 @@ export function registerActions(
     }> = [];
 
     for (const item of customerItems) {
-      items.push({
-        ...item,
-        isTable: false,
-      });
+      if (item.checked) {
+        items.push({
+          ...item,
+          isTable: false,
+        });
+      }
     }
 
     for (const tableName of tables) {
@@ -140,6 +143,7 @@ export function registerActions(
           tplName,
           baseOutDir,
           uiValues,
+          customerItems,
         },
         items
       );

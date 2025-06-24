@@ -268,8 +268,9 @@ const loadTemplates = async () => {
       tplName.value = allTemplates.value?.[0];
     }
 
-    uiParams.value = result.uiParams;
-    uiValues.value = result.uiValues;
+    uiParams.value = result.uiParams || [];
+    uiValues.value = result.uiValues || {};
+    customerItems.value = result.customerItems || [];
   } catch (err) {
     console.error(err);
   }
@@ -377,7 +378,7 @@ const startGenCode = async () => {
     const theCustomerItems: any[] = [];
     if (customerItems.value) {
       for (const item of customerItems.value) {
-        if (item.checked && item.name) {
+        if (item.name) {
           theCustomerItems.push({
             ...item,
           });

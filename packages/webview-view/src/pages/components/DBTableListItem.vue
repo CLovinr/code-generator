@@ -31,7 +31,7 @@
           </vscode-data-grid-cell>
         </vscode-data-grid-row>
         <template v-for="item in customerItems" :key="item.id">
-          <vscode-data-grid-row v-if="isMatch(item)">
+          <vscode-data-grid-row>
             <vscode-data-grid-cell grid-column="1">
               <div
                 style="
@@ -189,7 +189,7 @@ const isMatch = (item: any) => {
     return true;
   } else {
     return (
-      item.name.indexOf(searchText.value) >= 0 ||
+      item.name?.indexOf(searchText.value) >= 0 ||
       item.comment?.indexOf(searchText.value) >= 0
     );
   }
@@ -312,8 +312,8 @@ const addCustomerItem = () => {
   customerItems.value.push({
     id: `${itemIdBase}:${itemId++}`,
     checked: false,
-    name: undefined,
-    comment: undefined,
+    name: "",
+    comment: "",
   });
 };
 
