@@ -1,10 +1,8 @@
 <template>
   <div class="db-table-list">
-    <div class="right-tool">
-      <div v-if="!!modelValue?.length">已选数: {{ modelValue?.length }}</div>
-
+    <div class="top-tool">
       <VsTextField v-model="searchText" maxlength="128" placeholder="搜索" />
-
+      <div v-if="!existsDBTables">无数据表</div>
       <vscode-button
         appearance="icon"
         :disabled="globalLoading"
@@ -13,6 +11,8 @@
       >
         <i class="codicon codicon-sync"></i>
       </vscode-button>
+
+      <div v-if="!!modelValue?.length">已选数: {{ modelValue?.length }}</div>
     </div>
     <div ref="refDataGrid" class="table-grid">
       <vscode-data-grid aria-label="Basic" grid-template-columns="5fr 6fr 60px">
@@ -33,14 +33,31 @@
         <template v-for="item in customerItems" :key="item.id">
           <vscode-data-grid-row v-if="isMatch(item)">
             <vscode-data-grid-cell grid-column="1">
-              <VsTextField
-                v-model="item.name"
-                maxlength="128"
-                :disabled="globalLoading"
-                style="width: 100%"
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  width: 100%;
+                "
               >
-                <i slot="start" class="codicon codicon-symbol-field" />
-              </VsTextField>
+                <VsTextField
+                  v-model="item.name"
+                  maxlength="128"
+                  :disabled="globalLoading"
+                  style="flex: 1"
+                >
+                  <i slot="start" class="codicon codicon-symbol-field" />
+                </VsTextField>
+                <vscode-button
+                  appearance="icon"
+                  :disabled="globalLoading"
+                  @click="removeCustomerItem(item)"
+                  title="移除"
+                >
+                  <i class="codicon codicon-trash"></i>
+                </vscode-button>
+              </div>
             </vscode-data-grid-cell>
             <vscode-data-grid-cell grid-column="2">
               <VsTextField
@@ -101,6 +118,8 @@ const { globalLoading } = storeToRefs(vscodeApiStore);
 
 const searchText = ref("");
 const tableData = ref<any[]>([]);
+const existsDBTables = ref(false);
+
 const checkedTables = ref<any>({});
 const allChecked = ref(false);
 const isAllCheckProcessing = ref(false);
@@ -179,17 +198,25 @@ const isMatch = (item: any) => {
 const loadTables = async () => {
   try {
     globalLoading.value = true;
-    const tables = await vscodeApiStore.request(
+    const { tables } = await vscodeApiStore.request(
       "loadDBTables",
       props.configDir
     );
-    tableData.value = tables;
 
-    const checked: any = {};
-    tables.forEach((o: any) => {
-      checked[o.name] = checkedTables.value[o.name] || false;
-    });
-    checkedTables.value = checked;
+    if (_.isNil(tables)) {
+      tableData.value = [];
+      checkedTables.value = [];
+    } else {
+      tableData.value = tables;
+
+      const checked: any = {};
+      tables.forEach((o: any) => {
+        checked[o.name] = checkedTables.value[o.name] || false;
+      });
+      checkedTables.value = checked;
+    }
+
+    existsDBTables.value = !!tables;
   } finally {
     globalLoading.value = false;
     emit("onLoadTable");
@@ -290,6 +317,10 @@ const addCustomerItem = () => {
   });
 };
 
+const removeCustomerItem = (item: any) => {
+  customerItems.value = customerItems.value.filter((o) => o.id !== item.id);
+};
+
 defineExpose({
   addCustomerItem,
 });
@@ -298,16 +329,16 @@ defineExpose({
 .db-table-list {
   width: 100%;
   max-width: 1000px;
-  max-height: 350px;
+  height: 350px;
   display: flex;
   flex-direction: column;
 }
 
-.right-tool {
+.top-tool {
   margin-bottom: 10px;
   display: flex;
   align-items: center;
-  justify-content: right;
+  justify-content: left;
   gap: 20px;
 }
 

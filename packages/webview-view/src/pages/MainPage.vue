@@ -23,22 +23,35 @@
         <VsButton v-else-if="noProject"> 未打开项目 </VsButton>
       </div>
     </div>
-    <div class="form-item">
+    <div class="form-item" style="margin-bottom: 6px">
       <label class="w6">选择模板</label>
       <div class="field">
         <VsDropdown
           v-model="tplName"
-          :title="tplName"
+          :title="tplDescription"
           style="width: 150px"
-          :disabled="noProject || globalLoading"
+          :disabled="noProject || globalLoading || !isInitCodeGenConfig"
         >
-          <VsOption v-for="name in allTemplateNames" :value="name" :key="name">
-            {{ name }}
+          <VsOption
+            v-for="item in allTemplates"
+            :value="item.name"
+            :key="item.name"
+            :title="item.description"
+          >
+            {{ item.name }}
           </VsOption>
         </VsDropdown>
+        <vscode-button
+          appearance="icon"
+          :disabled="globalLoading"
+          @click="checkIsInit"
+          title="刷新"
+        >
+          <i class="codicon codicon-sync"></i>
+        </vscode-button>
       </div>
     </div>
-    <div class="form-item no-margin">
+    <div class="form-item no-margin" style="max-width: 500px">
       <label class="w6">保存位置</label>
       <div class="field" style="flex: 1; display: flex; gap: 5px">
         <VsTextField
@@ -46,6 +59,7 @@
           maxlength="1000"
           readonly
           style="flex: 1"
+          :title="baseOutDir"
         />
         <VsButton
           appearance="secondary"
@@ -57,19 +71,30 @@
       </div>
     </div>
     <template v-if="isInitCodeGenConfig">
-      <VsDivider />
-      <div class="form-item">
-        <DBTableListItem
-          ref="refTableListItem"
-          v-model:customerItems="customerItems"
-          v-model="tableNames"
-          :configDir="codeGenConfigDir"
-          @onLoadTable="loadTemplates"
-        />
-      </div>
+      <VsDivider style="margin-bottom: 0" />
+      <vscode-panels>
+        <vscode-panel-tab id="table" style="font-weight: bold">
+          表/模块
+        </vscode-panel-tab>
+        <vscode-panel-tab id="uiParams" style="font-weight: bold">
+          参数配置
+        </vscode-panel-tab>
+        <vscode-panel-view id="table" style="padding: 5px 0 0 0">
+          <DBTableListItem
+            ref="refTableListItem"
+            v-model:customerItems="customerItems"
+            v-model="tableNames"
+            :configDir="codeGenConfigDir"
+            @onLoadTable="loadTemplates"
+          />
+        </vscode-panel-view>
+        <vscode-panel-view id="uiParams" style="padding: 5px 0 0 0">
+          <UiParams ref="refUIParams" :uiParams="uiParams" v-model="uiValues" />
+        </vscode-panel-view>
+      </vscode-panels>
 
       <VsDivider />
-      <div class="form-item right no-margin">
+      <div class="form-item left no-margin">
         <div style="display: flex; align-items: center; gap: 5px">
           <VsButton
             :disabled="globalLoading || isGenerating"
@@ -130,6 +155,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
+import _ from "lodash";
 
 import path from "path-browserify";
 import { useVsCodeApiStore, CONFIG_DIR_BASE_NAME } from "@/stores/vscode";
@@ -144,6 +170,7 @@ import {
 } from "@/components/vscode";
 
 import DBTableListItem from "./components/DBTableListItem.vue";
+import UiParams from "./components/UiParams.vue";
 
 const vscodeApiStore = useVsCodeApiStore();
 
@@ -152,9 +179,26 @@ globalLoading.value = true;
 
 const workspaceFolders = ref<string[]>([]);
 const projectBaseDir = ref("");
-const allTemplateNames = ref<string[]>([]);
+const allTemplates = ref<any[]>([]);
 const tplName = ref("");
 const baseOutDir = ref("");
+
+const tplDescription = computed(() => {
+  let desc = "";
+  if (tplName.value) {
+    for (const tpl of allTemplates.value) {
+      if (tpl.name === tplName.value) {
+        desc = tpl.description || tpl.name;
+      }
+    }
+  }
+
+  return desc;
+});
+
+const uiParams = ref<any[]>([]);
+const uiValues = ref<any>({});
+const refUIParams = ref();
 
 const codeGenConfigDir = ref("");
 const isInitCodeGenConfig = ref(false);
@@ -178,6 +222,7 @@ const generateResultInfo = ref("");
 const refLogContainer = ref();
 
 const checkIsInit = async () => {
+  console.log("checkIsInit...");
   try {
     globalLoading.value = true;
     console.log("projectBaseDir: ", projectBaseDir.value);
@@ -195,26 +240,38 @@ const checkIsInit = async () => {
       isInitCodeGenConfig.value = false;
     }
   } finally {
+    console.log("checkIsInit finish");
     loadTemplates();
     globalLoading.value = false;
   }
 };
 
 const loadTemplates = async () => {
-  const result: any = await vscodeApiStore.request(
-    "getTemplateNames",
-    codeGenConfigDir.value
-  );
-  allTemplateNames.value = result.tplNames as string[];
-  tplName.value = result.current;
-  baseOutDir.value = result.baseOutDir;
+  try {
+    const result: any = await vscodeApiStore.request(
+      "getTemplateData",
+      codeGenConfigDir.value
+    );
 
-  if (tplName.value && !allTemplateNames.value.includes(tplName.value)) {
-    tplName.value = "";
-  }
+    allTemplates.value = result.templates as any[];
+    tplName.value = result.current;
+    baseOutDir.value = result.baseOutDir;
 
-  if (!tplName.value) {
-    tplName.value = allTemplateNames.value?.[0];
+    if (
+      tplName.value &&
+      !allTemplates.value?.filter((o) => o.name === tplName.value)?.length
+    ) {
+      tplName.value = "";
+    }
+
+    if (!tplName.value && allTemplates.value?.length) {
+      tplName.value = allTemplates.value?.[0];
+    }
+
+    uiParams.value = result.uiParams;
+    uiValues.value = result.uiValues;
+  } catch (err) {
+    console.error(err);
   }
 };
 
@@ -230,6 +287,10 @@ vscodeApiStore.onMessage("vscodeInitReady", (data) => {
 });
 
 vscodeApiStore.onMessage(["folders.list", "folders.change"], (data) => {
+  if (_.isEqual(data.folders, workspaceFolders.value)) {
+    return;
+  }
+
   workspaceFolders.value = data.folders as string[];
 
   if (
@@ -239,7 +300,7 @@ vscodeApiStore.onMessage(["folders.list", "folders.change"], (data) => {
     projectBaseDir.value = "";
   }
 
-  if (!projectBaseDir.value) {
+  if (!projectBaseDir.value && workspaceFolders.value?.length) {
     projectBaseDir.value = workspaceFolders.value?.[0];
   } else {
     checkIsInit();
@@ -274,7 +335,7 @@ const updateGenerateResultInfo = (state: any) => {
       continue;
     }
 
-    if (task.success === task.total) {
+    if (task.success === task.total || task.failed === 0) {
       success++;
     } else if (task.success === 0) {
       failed++;
@@ -311,12 +372,16 @@ const startGenCode = async () => {
     isGenerating.value = true;
     generateResultInfo.value = "";
 
+    await refUIParams.value.checkItems();
+
     const theCustomerItems: any[] = [];
     if (customerItems.value) {
       for (const item of customerItems.value) {
-        theCustomerItems.push({
-          ...item,
-        });
+        if (item.checked && item.name) {
+          theCustomerItems.push({
+            ...item,
+          });
+        }
       }
     }
 
@@ -326,6 +391,7 @@ const startGenCode = async () => {
       customerItems: theCustomerItems,
       tplName: tplName.value,
       baseOutDir: baseOutDir.value,
+      uiValues: _.cloneDeep(uiValues.value),
     });
 
     logMessages.value = result.log;
@@ -403,7 +469,7 @@ const addCustomerItem = () => {
 }
 
 .log-container {
-  height: calc(100vh - 580px);
+  height: calc(100vh - 615px);
   width: 100%;
   overflow: auto;
 

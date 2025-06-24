@@ -8,7 +8,7 @@ import * as vscode from "vscode";
 // import { PostgresDialect } from "@sequelize/postgres";
 // import { SqliteDialect } from "@sequelize/sqlite3";
 // import { Db2Dialect } from "@sequelize/db2";
-import { Sequelize, Config, Options } from "sequelize";
+import { Sequelize, Config, Options, type ColumnDescription } from "sequelize";
 
 import mysql2 from "mysql2";
 import pg from "pg";
@@ -57,8 +57,10 @@ async function newSequelize(item: any) {
     }
 
     return sequelize;
-  } catch (e) {
-    vscode.window.showErrorMessage(`连接数据库失败：${e}`);
+  } catch (e: any) {
+    vscode.window.showErrorMessage(
+      `连接数据库失败：key=${item.key}, message=${e.message || e}`
+    );
     throw e;
   }
 }
@@ -67,7 +69,11 @@ export async function listTableInfo(
   context: vscode.ExtensionContext,
   item: any,
   tableName: string
-) {
+): Promise<{
+  name: string;
+  comment?: string;
+  columns: ColumnDescription[];
+}> {
   const sequelize = await newSequelize(item);
   const describe = await sequelize.getQueryInterface().describeTable(tableName);
   const comment = await getTableComment(item.type, sequelize, tableName);

@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 import <%=basePackageName%>.entity.<%=moduleName%>;
 
-<%=utils.tableComment("表数据库访问层")%>
+<%=utils.getClassComment("表数据库访问层")%>
 public interface <%=moduleName%>Dao extends BaseMapper<<%=moduleName%>> {
 
     /**

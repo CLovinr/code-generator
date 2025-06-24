@@ -5,9 +5,10 @@
   "publisher": "clovinr",
   "description": "代码生成器的黄昏，新人少用，老人慎用。",
   "license": "Mulan PSL v2",
+  "homepage": "https://github.com/CLovinr/code-generator",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/CLovinr/code-generator.git"
   },
   "version": "1.0.0",
   "engines": {
@@ -22,13 +23,13 @@
   ],
   "main": "./dist/extension.js",
   "scripts": {
-    "compile": "npm run check-types && webpack --mode none",
+    "compile": "pnpm check-types && webpack --mode none",
     "check-types": "tsc --noEmit",
     "watch": "npm-run-all -p watch:*",
     "watch:webpack": "webpack --watch --mode none",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "vscode:prepublish": "npm run package",
-    "package": "npm run check-types && webpack --mode production",
+    "vscode:prepublish": "pnpm package",
+    "package": "pnpm check-types && webpack --mode production",
     "vsce:package": "vsce package --no-dependencies"
   },
   "devDependencies": {
@@ -57,7 +58,9 @@
     "sequelize": "^6.37.7",
     "tedious": "^18.6.1"
   },
-  "extensionDependencies": [],
+  "extensionDependencies": [
+    "mrmlnc.vscode-json5"
+  ],
   "activationEvents": [],
   "contributes": {
     "viewsContainers": {
@@ -78,6 +81,84 @@
           "icon": "resources/icon.svg"
         }
       ]
-    }
+    },
+    "languages": [
+      {
+        "id": "jstpl",
+        "aliases": [
+          "JS Template Generator",
+          "jstpl"
+        ],
+        "extensions": [
+          ".jstpl",
+          ".jsin"
+        ],
+        "configuration": "./configs/language-configuration.json",
+        "semanticTokenTypes": [
+          {
+            "name": "scriptlet",
+            "superType": "keyword"
+          },
+          {
+            "name": "scriptlet2",
+            "superType": "keyword"
+          },
+          {
+            "name": "expression",
+            "superType": "variable"
+          },
+          {
+            "name": "directive",
+            "superType": "keyword"
+          }
+        ],
+        "semanticTokenModifiers": [
+          {
+            "name": "embedded",
+            "superType": "modifier"
+          }
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jstpl",
+        "scopeName": "source.jstpl",
+        "path": "./configs/jstpl.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "JS Template Generator",
+      "properties": {
+        "jstpl.defaultTextColor": {
+          "type": "color",
+          "description": "jstpl文件中非标签文本的颜色"
+        },
+        "jstpl.defaultTagColor": {
+          "type": "color",
+          "description": "jstpl文件中标签文本的颜色"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "jstpl.defaultTextColor",
+        "description": "jstpl文件中非标签文本的颜色",
+        "defaults": {
+          "dark": "#979797bc",
+          "light": "#6161619f",
+          "highContrast": "#9f9b9b"
+        }
+      },
+      {
+        "id": "jstpl.defaultTagColor",
+        "description": "jstpl文件中标签文本的颜色",
+        "defaults": {
+          "dark": "#f5dd64",
+          "light": "#474618",
+          "highContrast": "#ba9555"
+        }
+      }
+    ]
   }
 }

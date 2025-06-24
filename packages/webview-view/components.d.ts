@@ -13,8 +13,6 @@ declare module 'vue' {
     VsDivider: typeof import('./src/components/vscode/vs-divider.vue')['default']
     VsDropdown: typeof import('./src/components/vscode/vs-dropdown.vue')['default']
     VsOption: typeof import('./src/components/vscode/vs-option.vue')['default']
-    VsRadio: typeof import('./src/components/vscode/vs-radio.vue')['default']
-    VsRadioGroup: typeof import('./src/components/vscode/vs-radio-group.vue')['default']
     VsTextArea: typeof import('./src/components/vscode/vs-text-area.vue')['default']
     VsTextField: typeof import('./src/components/vscode/vs-text-field.vue')['default']
   }

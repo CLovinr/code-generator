@@ -72,7 +72,7 @@ export const useVsCodeApiStore = defineStore("vsCodeApi", () => {
     }
   }
 
-  function processQueue(timeout: number = 30 * 1000) {
+  function processQueue(timeout: number = 60 * 1000) {
     if (processing) {
       return;
     }

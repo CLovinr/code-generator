@@ -1,0 +1,86 @@
+{
+  "name": "JS Template Generator",
+  "scopeName": "source.jstpl",
+  "fileTypes": ["jstpl", "jsin"],
+  "patterns": [
+    {
+      "include": "#scriptlets"
+    },
+    {
+      "include": "#scriptlets2"
+    },
+    {
+      "include": "#expressions"
+    },
+    {
+      "include": "#directives"
+    }
+  ],
+  "repository": {
+    "scriptlets": {
+      "patterns": [
+        {
+          "name": "meta.scriptlet.jstpl",
+          "begin": "<%",
+          "end": "%>",
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        }
+      ]
+    },
+    "scriptlets2": {
+      "patterns": [
+        {
+          "name": "meta.scriptlet2.jstpl",
+          "begin": "<%!",
+          "end": "%>",
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        }
+      ]
+    },
+    "expressions": {
+      "patterns": [
+        {
+          "name": "meta.expression.jstpl",
+          "begin": "<%=",
+          "end": "%>",
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        }
+      ]
+    },
+    "directives": {
+      "patterns": [
+        {
+          "name": "meta.directive.jstpl",
+          "begin": "<%@",
+          "end": "%>",
+          "patterns": [
+            {
+              "name": "keyword.directive.jstpl",
+              "match": "\\b(out|include|write|execute)\\b"
+            },
+            {
+              "name": "string.quoted.double.jstpl",
+              "match": "\"[^\"\n]*\""
+            },
+            {
+              "name": "string.quoted.single.jstpl",
+              "match": "'[^'\n]*'"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

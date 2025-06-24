@@ -27,6 +27,13 @@ function doListFileRecursive(pathStr: string, list: string[]) {
 
 let exeIdCount = 0;
 
+function getDeepAttrValue(contextMap: any, varName: string) {
+  const ctx = vm.createContext(contextMap);
+
+  const script = new vm.Script(`${varName}`);
+  return script.runInContext(ctx);
+}
+
 function genScript(
   baseOutDir: string,
   lexer2: Lexer2,
@@ -50,13 +57,36 @@ function genScript(
 
   const console = extraOptions.console;
 
-  let outPath =
-    path.join(
-      baseOutDir,
-      path.basename(currentFile, path.extname(currentFile))
-    ) + ".txt";
+  let outPath = undefined;
+  // path.join(
+  //   baseOutDir,
+  //   path.basename(currentFile, path.extname(currentFile))
+  // ) + ".txt";
   let write = true;
   let execute = undefined;
+
+  const removeBeforeLn = (index: number, lexer2: Lexer2, content: any) => {
+    const preItem = lexer2.getItem(index - 1);
+    if (
+      preItem &&
+      typeof content === "string" &&
+      [TYPE_LOCAL, TYPE_GLOBAL, TYPE_CONFIG].includes(preItem.type)
+    ) {
+      // 去掉一个换行符
+      content = content.replace(/^[\t ]*\n/, "");
+    }
+
+    return content;
+  };
+
+  const removeSETAfterContentLn = (index: number, lexer2: Lexer2) => {
+    const nextItem = lexer2.getItem(index + 1);
+    if (nextItem?.type === TYPE_CONTENT && typeof nextItem.value === "string") {
+      // 去掉一个换行符
+      nextItem.value = nextItem.value.replace(/^[\t ]*\n/, "");
+    }
+  };
+
   for (let i = 0; i < lexer2.length; i++) {
     const item = lexer2.getItem(i);
     const valId = "let-" + exeIdCount++;
@@ -64,19 +94,11 @@ function genScript(
     switch (item.type) {
       case TYPE_CONTENT:
         {
-          let currentContent = item.value;
-          const lastItem = lexer2.getItem(i - 1);
-          if (
-            lastItem &&
-            [TYPE_LOCAL, TYPE_GLOBAL, TYPE_CONFIG].includes(lastItem.type) &&
-            currentContent.startsWith("\n")
-          ) {
-            currentContent = currentContent.substring(1); // 去掉一个换行
-          }
+          const currentContent = removeBeforeLn(i, lexer2, item.value);
 
           __code_gen_bridge__.content[valId] = currentContent;
           scriptLocalQueue.push(
-            'out.print(__code_gen_bridge__.getContent("' + valId + '"));'
+            `out.print(__code_gen_bridge__.getContent("${valId}"));`
           );
         }
         break;
@@ -92,7 +114,13 @@ function genScript(
         break;
       case TYPE_SET:
         {
-          const keyName = item.value;
+          let keyName = item.value;
+          if (keyName.endsWith("!")) {
+            keyName = keyName.substring(0, keyName.length - 1);
+          } else {
+            removeSETAfterContentLn(i, lexer2);
+          }
+
           scriptLocalQueue.push("out.print(" + keyName + ");");
         }
         break;
@@ -111,13 +139,11 @@ function genScript(
               while (true) {
                 const rs = /\$\{\s*([a-zA-Z0-9_.$-]+)\s*\}/.exec(attrValue);
                 if (rs) {
-                  let varName = rs[1];
+                  const varName = rs[1];
+                  const varValue = getDeepAttrValue(globalContextMap, varName);
                   strPast += attrValue.substring(0, rs.index);
                   strPast +=
-                    globalContextMap[varName] === undefined ||
-                    globalContextMap[varName] === null
-                      ? ""
-                      : globalContextMap[varName];
+                    varValue === undefined || varValue === null ? "" : varValue;
                   attrValue = attrValue.substring(rs.index + rs[0].length);
                 } else {
                   strPast += attrValue;
@@ -129,7 +155,7 @@ function genScript(
 
             const rs = /^$\{\s*([a-zA-Z0-9_.$-]+)\s*\}$/.exec(attrValue);
             if (rs) {
-              attrValue = globalContextMap[rs[1]];
+              attrValue = getDeepAttrValue(globalContextMap, rs[1]);
             }
 
             if (attrValue === null || attrValue === undefined) {
@@ -142,9 +168,11 @@ function genScript(
                 break;
               case "write":
                 if (
+                  attrValue === "no" ||
                   attrValue === "false" ||
                   attrValue === false ||
-                  attrValue === "0"
+                  attrValue === "0" ||
+                  attrValue === 0
                 ) {
                   write = false;
                 } else {
@@ -153,9 +181,11 @@ function genScript(
                 break;
               case "execute":
                 if (
+                  attrValue === "no" ||
                   attrValue === "false" ||
                   attrValue === false ||
-                  attrValue === "0"
+                  attrValue === "0" ||
+                  attrValue === 0
                 ) {
                   execute = false;
                 } else {

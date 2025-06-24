@@ -3,6 +3,7 @@
     items: {
       "local-mysql": {
         type: "mysql",
+        enable: true,
         initSqls: ["SET NAMES utf8mb4"],
         options: {
           host: "localhost",

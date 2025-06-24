@@ -5,11 +5,38 @@ function firstLowerCase(str) {
   return str.substring(0, 1).toLowerCase() + str.slice(1);
 }
 
-function tableComment(type) {
+function getDateTime() {
+  const now = new Date();
+  // 补零函数
+  const padZero = (num) => num.toString().padStart(2, "0");
+  // 年
+  const year = now.getFullYear();
+  // 月 (注意：getMonth() 返回 0-11)
+  const month = padZero(now.getMonth() + 1);
+  // 日
+  const day = padZero(now.getDate());
+  // 时
+  const hours = padZero(now.getHours());
+  // 分
+  const minutes = padZero(now.getMinutes());
+  // 秒
+  const seconds = padZero(now.getSeconds());
+
+  // 组合成指定格式
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function getClassComment(suffix = "") {
   const comment = `/**
- * ${tableInfo.comment || type}
+ * ${tableInfo.comment}（${moduleName}）${suffix}
+ * @author ${author}
+ * @since ${currentDatetime}
  */`;
   return comment;
+}
+
+function tableComment(suffix = "") {
+  return (tableInfo.comment || "") + suffix;
 }
 
 function getModuleName() {
@@ -66,7 +93,7 @@ function getJavaMapperType(sqlType, short = false) {
   return type;
 }
 
-function getJavaTypeImports() {
+function getJavaColumnFieldImports() {
   const imports = [];
   for (const column of tableInfo.columns) {
     const type = getJavaMapperType(column.type);
@@ -96,6 +123,8 @@ function getJavaSetterGetterMethod(column) {
 
 function onStart() {
   global.moduleName = getModuleName();
+  global.firstLowerModuleName = utils.firstLowerCase(moduleName);
+
   let pk = "";
   const otherColumns = [];
   for (const column of tableInfo.columns) {
@@ -108,15 +137,18 @@ function onStart() {
 
   tableInfo.otherColumns = otherColumns;
   global.pk = pk;
+  global.currentDatetime = getDateTime();
 }
 
 module.exports = {
   firstLowerCase,
+  getDateTime,
+  getClassComment,
   tableComment,
   getJavaShortType,
   getJavaVarName,
   getJavaSetterGetterMethod,
-  getJavaTypeImports,
+  getJavaColumnFieldImports,
   getJavaMapperType,
   onStart,
 };

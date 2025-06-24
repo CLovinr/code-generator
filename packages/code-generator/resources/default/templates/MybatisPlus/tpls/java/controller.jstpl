@@ -5,8 +5,7 @@ out="java/${basePackagePath}/controller/${moduleName}Controller.java"
 package <%=basePackageName%>.controller;
 
 <%
-const lowerModuleName = utils.firstLowerCase(moduleName);
-const serviceName = lowerModuleName + 'Service';
+const serviceName = firstLowerModuleName + 'Service';
 %>
 
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +20,9 @@ import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.List;
 
-<%=utils.tableComment("表控制层")%>
+<%=utils.getClassComment("表控制层")%>
 @RestController
-@RequestMapping("<%=lowerModuleName%>")
+@RequestMapping("<%=firstLowerModuleName%>")
 public class <%=moduleName%>Controller extends ApiController {
     /**
      * 服务对象
@@ -35,12 +34,12 @@ public class <%=moduleName%>Controller extends ApiController {
      * 分页查询所有数据
      *
      * @param page 分页对象
-     * @param <%=lowerModuleName%> 查询实体
+     * @param <%=firstLowerModuleName%> 查询实体
      * @return 所有数据
      */
     @GetMapping
-    public R selectAll(Page<<%=moduleName%>> page, <%=moduleName%> <%=lowerModuleName%>) {
-        return success(this.<%=serviceName%>.page(page, new QueryWrapper<>(<%=lowerModuleName%>));
+    public R selectAll(Page<<%=moduleName%>> page, <%=moduleName%> <%=firstLowerModuleName%>) {
+        return success(this.<%=serviceName%>.page(page, new QueryWrapper<>(<%=firstLowerModuleName%>));
     }
 
     /**
@@ -57,23 +56,23 @@ public class <%=moduleName%>Controller extends ApiController {
     /**
      * 新增数据
      *
-     * @param <%=lowerModuleName%> 实体对象
+     * @param <%=firstLowerModuleName%> 实体对象
      * @return 新增结果
      */
     @PostMapping
-    public R insert(@RequestBody <%=moduleName%> <%=lowerModuleName%>) {
-        return success(this.<%=serviceName%>.save(<%=lowerModuleName%>));
+    public R insert(@RequestBody <%=moduleName%> <%=firstLowerModuleName%>) {
+        return success(this.<%=serviceName%>.save(<%=firstLowerModuleName%>));
     }
 
     /**
      * 修改数据
      *
-     * @param <%=lowerModuleName%> 实体对象
+     * @param <%=firstLowerModuleName%> 实体对象
      * @return 修改结果
      */
     @PutMapping
-    public R update(@RequestBody <%=moduleName%> <%=lowerModuleName%>) {
-        return success(this.<%=serviceName%>.updateById(<%=lowerModuleName%>));
+    public R update(@RequestBody <%=moduleName%> <%=firstLowerModuleName%>) {
+        return success(this.<%=serviceName%>.updateById(<%=firstLowerModuleName%>));
     }
 
     /**

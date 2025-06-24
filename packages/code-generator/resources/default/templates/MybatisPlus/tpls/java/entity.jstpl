@@ -6,9 +6,9 @@ package <%=basePackageName%>.entity;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
-<%=utils.getJavaTypeImports()%>
+<%=utils.getJavaColumnFieldImports()%>
 
-<%=utils.tableComment("表实体类")%>
+<%=utils.getClassComment("表实体类")%>
 @SuppressWarnings("serial")
 public class <%=moduleName%> extends Model<<%=moduleName%>> {
 <%

@@ -219,7 +219,7 @@ class LexerConfig {
   /**
    *
    * @param {Object} type
-   * @param {Object} backStep backStep 为0或undefind表示push当前字符到cache、并把index增加1，否则表示回退
+   * @param {Object} backStep backStep 为0或undefined表示push当前字符到cache、并把index增加1，否则表示回退
    */
   private newPartAndNext(
     type: string | undefined,
@@ -399,7 +399,7 @@ class Lexer2 {
   /**
    *
    * @param {Object} type
-   * @param {Object} backStep backStep 为0或undefind表示push当前字符到cache、并把index增加1，否则表示回退
+   * @param {Object} backStep backStep 为0或undefined表示push当前字符到cache、并把index增加1，否则表示回退
    */
   private newPartAndNext(type: string, backStep: number = 0) {
     if (backStep) {

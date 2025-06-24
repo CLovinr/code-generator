@@ -8,9 +8,48 @@
     utils.onStart();\
   ",
   ui: {
-    checkOptions: [
-      { text: "Entity", varName: "entity" },
-      { text: "Controller", varName: "controller" },
+    attr: "formState",
+    params: [
+      {
+        var: "prop1",
+        label: "参数1",
+        type: "checkbox",
+        default: {},
+        required: false,
+        options: [
+          { text: "Entity", value: "entity", "title": "" },
+          { text: "Controller", value: "controller", "title": "" },
+        ],
+      },
+      {
+        var: "prop2",
+        label: "参数2",
+        type: "dropdown",
+        default: "",
+        required: false,
+        options: [
+          { text: "Entity", value: "entity", "title": "" },
+          { text: "Controller", value: "controller", "title": "" },
+        ],
+      },
+      {
+        var: "prop3",
+        label: "参数3",
+        type: "textfield",
+        default: "",
+        required: false,
+        maxlength: 128,
+        title: "",
+      },
+      {
+        var: "prop4",
+        label: "参数4",
+        type: "textarea",
+        default: "",
+        required: false,
+        maxlength: 512,
+        title: "",
+      },
     ],
   },
   databases: {
@@ -18,6 +57,7 @@
     items: {
       "mysql01": {
         type: "mysql",
+        enable: true,
         initSqls: ["SET NAMES utf8mb4"],
         options: {
           host: "localhost",

@@ -7,11 +7,15 @@ import {
   vsCodeTextArea,
   vsCodeDropdown,
   vsCodeOption,
+  vsCodeRadio,
   vsCodeRadioGroup,
   vsCodeDivider,
   vsCodeDataGrid,
   vsCodeDataGridRow,
   vsCodeDataGridCell,
+  vsCodePanels,
+  vsCodePanelView,
+  vsCodePanelTab,
 } from "@vscode/webview-ui-toolkit";
 
 provideVSCodeDesignSystem().register(
@@ -21,9 +25,13 @@ provideVSCodeDesignSystem().register(
   vsCodeTextArea(),
   vsCodeDropdown(),
   vsCodeOption(),
+  vsCodeRadio(),
   vsCodeRadioGroup(),
   vsCodeDivider(),
   vsCodeDataGrid(),
   vsCodeDataGridRow(),
-  vsCodeDataGridCell()
+  vsCodeDataGridCell(),
+  vsCodePanels(),
+  vsCodePanelView(),
+  vsCodePanelTab()
 );

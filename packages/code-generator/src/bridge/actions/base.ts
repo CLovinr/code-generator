@@ -35,7 +35,7 @@ export function registerActions(
     }
   });
 
-  onAction("getTemplateNames", async (data) => {
+  onAction("getTemplateData", async (data) => {
     const configDir: string = data as string;
     const generator = new CodeGenerator(context, configDir);
 
@@ -101,6 +101,7 @@ export function registerActions(
     const configDir: string = data.configDir;
     const tplName: string = data.tplName;
     const baseOutDir: string = data.baseOutDir?.replace(/\\/g, "/");
+    const uiValues: any = data.uiValues;
 
     const customerItems: Array<{
       id: any;
@@ -138,6 +139,7 @@ export function registerActions(
         {
           tplName,
           baseOutDir,
+          uiValues,
         },
         items
       );

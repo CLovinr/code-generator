@@ -4,8 +4,6 @@ import VsDropdown from "./vs-dropdown.vue";
 import VsOption from "./vs-option.vue";
 import VsButton from "./vs-button.vue";
 import VsCheckbox from "./vs-checkbox.vue";
-import VsRadio from "./vs-radio.vue";
-import VsRadioGroup from "./vs-radio-group.vue";
 import VsDivider from "./vs-divider.vue";
 
 export {
@@ -15,7 +13,5 @@ export {
   VsOption,
   VsButton,
   VsCheckbox,
-  VsRadio,
-  VsRadioGroup,
   VsDivider,
 };

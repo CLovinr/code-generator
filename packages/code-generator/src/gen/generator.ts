@@ -49,6 +49,22 @@ export class CodeGenerator {
     this.config = config;
   }
 
+  private getCurrentDBItem() {
+    const currentKey = this.config.databases.current;
+    const dbConfigItem = this.config.databases.items?.[currentKey];
+
+    if (!dbConfigItem || dbConfigItem.enable === false) {
+      // vscode.window.showErrorMessage(`无法获取数据库连接配置：${currentKey}`);
+      // throw new Error(`Not found database config item: ${currentKey}`);
+      return null;
+    }
+
+    const item = _.cloneDeep(dbConfigItem);
+    item.key = currentKey;
+
+    return item;
+  }
+
   private get currentJsonFile() {
     const currentPath = path.join(this.configDir, "local.current.json");
     return currentPath;
@@ -93,41 +109,54 @@ export class CodeGenerator {
     }
   }
 
-  private getCurrentDBItem() {
-    const currentName = this.config.databases.current;
-    const dbConfigItem = this.config.databases.items?.[currentName];
-
-    if (!dbConfigItem) {
-      vscode.window.showErrorMessage(`无法获取数据库连接配置：${currentName}`);
-      throw new Error(`Not found database config item: ${currentName}`);
-    }
-
-    const item = _.cloneDeep(dbConfigItem);
-    return item;
-  }
-
   public async getTemplateData() {
     const templatesDir = path.join(this.configDir, "templates");
     const files = fs.readdirSync(templatesDir);
-    const tplNames: string[] = [];
+    const templates: any[] = [];
     files.forEach((name) => {
       const stat = fs.statSync(path.join(templatesDir, name));
       if (stat.isDirectory()) {
-        tplNames.push(name);
+        const tpl: any = {
+          name,
+        };
+        const infoPath = path.join(path.join(templatesDir, name, "info.json5"));
+        if (fs.existsSync(infoPath)) {
+          try {
+            const content = fs.readFileSync(infoPath, "utf-8");
+            const tplInfo = JSON5.parse(content);
+            tpl.description = tplInfo.description;
+          } catch (err) {
+            console.error(`load template info error: ${infoPath}`, err);
+          }
+        }
+
+        templates.push(tpl);
       }
     });
 
+    const uiParams = this.config.ui?.params || [];
+    const uiValues = this.config.ui.values || {};
+
     return {
-      tplNames,
+      templates,
       current: this.config.tplName,
       baseOutDir: this.config.baseOutDir,
+      uiParams,
+      uiValues,
     };
   }
 
   public async loadTables() {
     const item = this.getCurrentDBItem();
+    if (!item) {
+      return {
+        tables: null,
+      };
+    }
     const tables = await loadTables(this.context, item);
-    return tables;
+    return {
+      tables,
+    };
   }
 
   public async listTableInfo(tableName: string) {
@@ -153,6 +182,7 @@ export class CodeGenerator {
     options: {
       tplName?: string;
       baseOutDir?: string;
+      uiValues?: any;
     },
     items: Array<{
       id: any;
@@ -173,6 +203,7 @@ export class CodeGenerator {
     options: {
       tplName?: string;
       baseOutDir?: string;
+      uiValues?: any;
     },
     items: Array<{
       id: any;
@@ -189,6 +220,8 @@ export class CodeGenerator {
     const absBaseOutDir = TplScript.getPath(this.configDir, baseOutDir);
 
     const finalTplName = options.tplName || config.tplName;
+    const uiValuesVar = this.config.ui?.attr || "formState";
+    const finalUiValues = options.uiValues || {};
 
     const encoding = config.encoding || "utf-8";
     const outEncoding = config.outEncoding || encoding;
@@ -216,6 +249,9 @@ export class CodeGenerator {
       {
         tplName: finalTplName,
         baseOutDir,
+        ui: {
+          values: finalUiValues,
+        },
       },
       encoding
     );
@@ -244,7 +280,7 @@ export class CodeGenerator {
       tplDir,
     };
 
-    const globalContext = { ...config.attrs };
+    const globalContext = { ...config.attrs, [uiValuesVar]: finalUiValues };
 
     globalContext.console = {
       ...console,
@@ -389,8 +425,20 @@ export class CodeGenerator {
 
               const outFile = result.out;
               const content = result.content;
-              if (!result.write) {
-                globalContext.console.log("not write file:", outFile);
+              if (!outFile) {
+                globalContext.console.log(
+                  "no write file:",
+                  outFile,
+                  ", jstpl=" + file
+                );
+                noticeProgress();
+              } else if (!result.write) {
+                globalContext.console.log(
+                  "not write file: ",
+                  outFile,
+                  ", jstpl=" + file
+                );
+                noticeProgress();
               } else {
                 globalContext.console.log("write file:", outFile);
 

@@ -11,11 +11,10 @@ import <%=basePackageName%>.entity.<%=moduleName%>;
 import <%=basePackageName%>.service.<%=moduleName%>Service;
 
 <%
-const lowerModuleName = utils.firstLowerCase(moduleName);
-const serviceName = lowerModuleName + 'Service';
+const serviceName = firstLowerModuleName + 'Service';
 %>
 
-<%=utils.tableComment("表服务实现类")%>
+<%=utils.getClassComment("表服务实现类")%>
 @Service("<%=serviceName%>")
 public class <%=moduleName%>Impl extends ServiceImpl<<%=moduleName%>Dao, <%=moduleName%>> implements <%=moduleName%>Service {
 
