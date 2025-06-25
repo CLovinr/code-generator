@@ -31,7 +31,8 @@ function getClassComment(suffix = "") {
  * ${tableInfo.comment}（${moduleName}）${suffix}
  * @author ${author}
  * @since ${currentDatetime}
- */`;
+ */
+`;
   return comment;
 }
 
@@ -138,6 +139,10 @@ function onStart() {
   tableInfo.otherColumns = otherColumns;
   global.pk = pk;
   global.currentDatetime = getDateTime();
+  global.basePackageName = formState.basePackageName;
+  global.basePackagePath = formState.basePackageName.replace(/\./g, "/");
+  global.subName = formState.subName;
+  global.author = formState.author;
 }
 
 module.exports = {

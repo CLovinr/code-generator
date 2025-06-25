@@ -1,7 +1,7 @@
 <template>
   <div class="db-table-list">
     <div class="top-tool">
-      <VsTextField v-model="searchText" maxlength="128" placeholder="搜索" />
+      <VsTextField v-model="searchText" maxlength="128" placeholder="搜索" style="width: 260px;" />
       <div v-if="!existsDBTables">无数据表</div>
       <vscode-button
         appearance="icon"

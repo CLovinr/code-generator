@@ -107,7 +107,7 @@ export class CodeGenerator {
     encoding: BufferEncoding = "utf-8"
   ) {
     try {
-      const content = JSON.stringify(currentJson || {});
+      const content = JSON.stringify(currentJson || {}, undefined, 2);
       const currentJsonPath = this.currentJsonFile;
       fs.writeFileSync(currentJsonPath, content, {
         encoding: encoding,

@@ -70,7 +70,7 @@ Visual Studio Code 代码生成器插件
       ```
 5. 配置文件`main.json5`
    1. `databases`用于设置数据库连接信息
-   2. `attrs`用于设置全局变量
+   2. `attrs`设置全局变量，可在模板脚本中直接访问变量
    ```json5
    {
      attrs: {
@@ -78,10 +78,159 @@ Visual Studio Code 代码生成器插件
      },
    }
    ```
+   3. `ui` 可添加自定义参数输入组件
+
+### 数据库配置
+
+```json5
+{
+  databases: {
+    current: "local-mysql",
+    items: {
+      "local-mysql": {
+        type: "mysql",
+        enable: true,
+        initSqls: ["SET NAMES utf8mb4"],
+        options: {
+          host: "localhost",
+          port: 3306,
+          username: "user",
+          password: "password",
+          database: "demo",
+          ssl: false,
+          dialectOptions: {
+            // https://github.com/sidorares/node-mysql2
+            insecureAuth: false,
+          },
+        },
+      },
+      "local-pg": {
+        type: "postgres",
+        enable: true,
+        initSqls: [],
+        options: {
+          host: "localhost",
+          port: 5432,
+          username: "postgres",
+          password: "12345678",
+          database: "postgres",
+          schema: "public",
+          ssl: false,
+        },
+      },
+      "local-mssql": {
+        type: "mssql",
+        enable: true,
+        initSqls: [],
+        options: {
+          host: "localhost",
+          port: 1433,
+          username: "sa",
+          password: "123456",
+          database: "demo",
+          schema: "dbo",
+          ssl: false,
+          dialectOptions: {
+            options: {
+              trustServerCertificate: true,
+              encrypt: false,
+            },
+            authentication: {},
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+- `current`：当前使用的数据库
+- `items`：数据库配置项
+  - `type`：数据库类型，目前仅支持：`mysql`, `postgres`, `mariadb`, `mssql`
+  - `enable`：是否启用，当为 false 时，则不会访问数据库获取数据表
+  - `initSqls`：连接成功后，初始执行的 sql 语句
+  - `options`：数据库连接配置信息
+
+#### 已测试的数据库：
+
+- `mysql`：5.7，8.0
+- `postgresql`：17
+- `mssql`：2012
+
+### 自定义参数输入
+
+```json5
+{
+  ui: {
+    attr: "formState",
+    params: [
+      {
+        var: "prop1",
+        label: "参数1",
+        type: "checkbox",
+        default: {},
+        required: false,
+        options: [
+          { text: "Entity", value: "entity", title: "" },
+          { text: "Controller", value: "controller", title: "" },
+        ],
+      },
+      {
+        var: "prop2",
+        label: "参数2",
+        type: "dropdown",
+        default: "",
+        required: false,
+        options: [
+          { text: "Entity", value: "entity", title: "" },
+          { text: "Controller", value: "controller", title: "" },
+        ],
+      },
+      {
+        var: "prop3",
+        label: "参数3",
+        type: "textfield",
+        default: "",
+        required: false,
+        maxlength: 128,
+        title: "",
+      },
+      {
+        var: "prop4",
+        label: "参数4",
+        type: "textarea",
+        default: "",
+        required: false,
+        maxlength: 512,
+        title: "",
+      },
+    ],
+  },
+}
+```
+
+- `ui.attr`：全局引用的变量，如：formState
+- `ui.params[]`：声明输入组件
+  - `var`：变量名
+  - `label`：输入项标签
+  - `type`：组件类型
+    - 复选框（`checkbox`）：被勾选的选项值为 true，如：`Entity`被勾选时，`formState.prop1.entity===true`
+      - `options`：选项数据
+      - `options[].title`：鼠标放置后，选项提示内容
+    - 下拉框（`dropdown`）：变量为选择选项的值，如：`formState.prop2==='controller'`
+      - `options`：选项数据
+      - `options[].title`：鼠标放置后，选项提示内容
+    - 单行输入（`textfield`）：变量为输入值
+      - `maxlength`：最大输入字符数
+    - 多行输入（`textarea`）：变量为输入值
+      - `maxlength`：最大输入字符数
+  - `default`：默认值
+  - `required`：是否必填项
+  - `title`：鼠标放置后显示的提示内容
 
 ## 4、已知问题
 
-## 发布说明
+## 5、发布说明
 
 ### 1.0.0
 

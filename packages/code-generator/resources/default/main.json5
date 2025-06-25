@@ -11,6 +11,34 @@
     attr: "formState",
     params: [
       {
+        var: "basePackageName",
+        enable: true,
+        label: "基础包名称",
+        type: "textfield",
+        default: "com.sysl.mall",
+        required: true,
+        maxlength: 64,
+        title: "",
+      },
+      {
+        var: "subName",
+        label: "子包名称",
+        type: "textfield",
+        default: "statistic",
+        required: true,
+        maxlength: 64,
+        title: "",
+      },
+      {
+        var: "author",
+        label: "作者",
+        type: "textfield",
+        default: "chenyg",
+        required: true,
+        maxlength: 64,
+        title: "",
+      },
+      {
         var: "prop1",
         label: "参数1",
         type: "checkbox",
@@ -72,12 +100,44 @@
           },
         },
       },
+      "local-pg": {
+        type: "postgres",
+        enable: true,
+        initSqls: [],
+        options: {
+          host: "localhost",
+          port: 5432,
+          username: "postgres",
+          password: "123456",
+          database: "postgres",
+          schema: "public",
+          ssl: false,
+        },
+      },
+      "local-mssql": {
+        type: "mssql",
+        enable: true,
+        initSqls: [],
+        options: {
+          host: "localhost",
+          port: 1433,
+          username: "sa",
+          password: "123456",
+          database: "demo",
+          schema: "dbo",
+          ssl: false,
+          dialectOptions: {
+            options: {
+              trustServerCertificate: true,
+              encrypt: false,
+            },
+            authentication: {},
+          },
+        },
+      },
     },
   },
   attrs: {
-    basePackagePath: "com/test/demo",
-    basePackageName: "com.test.demo",
-    author: "chenyg",
     removePrefix: "test_",
     typeMappers: [
       {

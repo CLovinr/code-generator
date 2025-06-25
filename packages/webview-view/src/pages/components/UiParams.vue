@@ -1,65 +1,61 @@
 <template>
   <div class="ui-params">
     <div class="params-container">
-      <template v-if="props.uiParams">
-        <template v-for="(item, index) in props.uiParams" :key="item.var">
-          <VsDivider v-if="index > 0" style="width: 50%" />
-          <div class="form-item">
-            <label class="w6">{{ item.label }}</label>
-            <div class="field">
-              <template v-if="item.type === 'checkbox'">
-                <VsCheckbox
+      <template v-for="(item, index) in enabledUIParams" :key="item.var">
+        <VsDivider v-if="index > 0" style="width: 50%" />
+        <div class="form-item" :title="item.title">
+          <label class="w6">{{ item.label }}</label>
+          <div class="field">
+            <template v-if="item.type === 'checkbox'">
+              <VsCheckbox
+                v-for="o in item.options"
+                v-model="uiValues[item.var][o.value]"
+                :value="o.value"
+                :key="o.value"
+                :disabled="globalLoading"
+                :title="o.title"
+                >{{ o.text }}</VsCheckbox
+              >
+            </template>
+            <template v-else-if="item.type === 'dropdown'">
+              <VsDropdown
+                v-model="uiValues[item.var]"
+                :title="item.title"
+                :disabled="globalLoading"
+              >
+                <VsOption
                   v-for="o in item.options"
-                  v-model="uiValues[item.var][o.value]"
                   :value="o.value"
                   :key="o.value"
                   :disabled="globalLoading"
                   :title="o.title"
-                  >{{ o.text }}</VsCheckbox
                 >
-              </template>
-              <template v-else-if="item.type === 'dropdown'">
-                <VsDropdown
-                  v-model="uiValues[item.var]"
-                  :title="item.title"
-                  :disabled="globalLoading"
-                >
-                  <VsOption
-                    v-for="o in item.options"
-                    :value="o.value"
-                    :key="o.value"
-                    :disabled="globalLoading"
-                    :title="o.title"
-                  >
-                    {{ o.text }}
-                  </VsOption>
-                </VsDropdown>
-              </template>
-              <template v-else-if="item.type === 'textfield'">
-                <VsTextField
-                  v-model="uiValues[item.var]"
-                  :disabled="globalLoading"
-                  :title="item.title"
-                  :maxlength="item.maxlength"
-                />
-              </template>
-              <template v-else-if="item.type === 'textarea'">
-                <VsTextArea
-                  v-model="uiValues[item.var]"
-                  :disabled="globalLoading"
-                  :title="item.title"
-                  :maxlength="item.maxlength"
-                />
-              </template>
-            </div>
+                  {{ o.text }}
+                </VsOption>
+              </VsDropdown>
+            </template>
+            <template v-else-if="item.type === 'textfield'">
+              <VsTextField
+                v-model="uiValues[item.var]"
+                :disabled="globalLoading"
+                :maxlength="item.maxlength"
+              />
+            </template>
+            <template v-else-if="item.type === 'textarea'">
+              <VsTextArea
+                v-model="uiValues[item.var]"
+                :disabled="globalLoading"
+                :maxlength="item.maxlength"
+              />
+            </template>
           </div>
-        </template>
+        </div>
       </template>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import _ from "lodash";
 
@@ -88,23 +84,45 @@ const { globalLoading } = storeToRefs(vscodeApiStore);
 const modelValue = defineModel<any>("modelValue");
 const uiValues = ref<any>({});
 
-const updateUiValues = () => {
-  const values = modelValue.value ? _.cloneDeep(modelValue.value) : {};
+const enabledUIParams = computed(() => {
+  const params: any = [];
   if (props.uiParams) {
     for (const p of props.uiParams) {
-      if (!(p.var in values)) {
-        if (p.type === "checkbox") {
-          values[p.var] = {
-            ...p.default,
-          };
-          for (const o of p.options) {
-            if (!(o.value in values[p.var])) {
-              values[p.var][o.value] = false;
-            }
+      if (p.enable !== false) {
+        params.push(p);
+      }
+    }
+  }
+
+  return params;
+});
+
+const updateUiValues = () => {
+  const values = modelValue.value ? _.cloneDeep(modelValue.value) : {};
+  for (const p of enabledUIParams.value) {
+    // 简单判断已存储的值类型不符合时，删除值
+    if (p.type === "checkbox" && typeof values[p.var] !== "object") {
+      delete values[p.var];
+    } else if (p.type !== "checkbox" && typeof values[p.var] === "object") {
+      delete values[p.var];
+    }
+
+    if (!(p.var in values)) {
+      if (p.type === "checkbox") {
+        values[p.var] =
+          typeof p.default === "object"
+            ? {
+                ...p.default,
+              }
+            : {};
+
+        for (const o of p.options) {
+          if (!(o.value in values[p.var])) {
+            values[p.var][o.value] = false;
           }
-        } else {
-          values[p.var] = (p.default || "").trim();
         }
+      } else {
+        values[p.var] = (p.default || "").trim();
       }
     }
   }
@@ -117,7 +135,7 @@ watch(modelValue, updateUiValues, {
   immediate: true,
 });
 
-watch(() => props.uiParams, updateUiValues, {
+watch(enabledUIParams, updateUiValues, {
   deep: true,
 });
 
@@ -143,26 +161,24 @@ watch(
 );
 
 const checkItems = async () => {
-  if (props.uiParams) {
-    for (const item of props.uiParams) {
-      if (item.required) {
-        let isOk = false;
-        if (item.type === "checkbox") {
-          isOk = Object.values(uiValues.value[item.var]).includes(true);
+  for (const item of enabledUIParams.value) {
+    if (item.required) {
+      let isOk = false;
+      if (item.type === "checkbox") {
+        isOk = Object.values(uiValues.value[item.var]).includes(true);
+      } else {
+        const v = uiValues.value[item.var];
+        if (typeof v === "string") {
+          isOk = !!v.trim();
         } else {
-          const v = uiValues.value[item.var];
-          if (typeof v === "string") {
-            isOk = !!v.trim();
-          } else {
-            isOk = !_.isNil(v);
-          }
+          isOk = !_.isNil(v);
         }
+      }
 
-        if (!isOk) {
-          const errmsg = `【${item.label}】为必填参数`;
-          await vscodeApiStore.request("showWarningMessage", errmsg);
-          throw new Error(errmsg);
-        }
+      if (!isOk) {
+        const errmsg = `【${item.label}】为必填参数`;
+        await vscodeApiStore.request("showWarningMessage", errmsg);
+        throw new Error(errmsg);
       }
     }
   }

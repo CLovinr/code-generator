@@ -13,7 +13,7 @@ import { Sequelize, Config, Options, type ColumnDescription } from "sequelize";
 import mysql2 from "mysql2";
 import pg from "pg";
 import mariadb from "mariadb";
-import tedious from "tedious"; // mssql
+import * as tedious from "tedious"; // mssql
 
 Sequelize.beforeInit((config: Config, options: Options) => {
   // 解决打包后，运行期间找不到依赖的问题
@@ -24,7 +24,21 @@ Sequelize.beforeInit((config: Config, options: Options) => {
   } else if (options.dialect === "mariadb") {
     options.dialectModule = mariadb;
   } else if (options.dialect === "mssql") {
+    console.log(`tedious: `, tedious);
     options.dialectModule = tedious;
+    if (options.schema) {
+      if (!options.dialectOptions) {
+        options.dialectOptions = {};
+      }
+
+      const dialectOptions: any = options.dialectOptions;
+
+      if (!dialectOptions.options) {
+        dialectOptions.options = {};
+      }
+
+      dialectOptions.options.schema = options.schema;
+    }
   }
 
   if (!options.dialectModule) {
@@ -34,7 +48,9 @@ Sequelize.beforeInit((config: Config, options: Options) => {
 
 async function newSequelize(item: any) {
   if (
-    !["mysql", "postgres", "mariadb", "mssql"].includes(item.type as string)
+    !["mysql", "postgres", "mariadb", "mssql"].includes(
+      item.type as string
+    )
   ) {
     const errmsg = `unknown type: ${item.type}`;
     vscode.window.showErrorMessage(errmsg);
@@ -75,8 +91,25 @@ export async function listTableInfo(
   columns: ColumnDescription[];
 }> {
   const sequelize = await newSequelize(item);
-  const describe = await sequelize.getQueryInterface().describeTable(tableName);
-  const comment = await getTableComment(item.type, sequelize, tableName);
+  let describe;
+  try {
+    describe = await sequelize.getQueryInterface().describeTable(tableName);
+  } catch (e: any) {
+    vscode.window.showErrorMessage(
+      `获取数据表结构信息失败： table=${tableName}, message=${e.message || e}`
+    );
+    throw e;
+  }
+
+  let comment;
+  try {
+    comment = await getTableComment(item.type, sequelize, tableName, item);
+  } catch (e: any) {
+    vscode.window.showErrorMessage(
+      `获取数据表注释失败： table=${tableName}, message=${e.message || e}`
+    );
+    throw e;
+  }
   sequelize.close();
 
   const columns = [];
@@ -98,14 +131,37 @@ export async function loadTables(context: vscode.ExtensionContext, item: any) {
   const sequelize = await newSequelize(item);
 
   const tables: any[] = [];
-  const result = await sequelize.getQueryInterface().showAllTables();
-  for (const name of result) {
-    // const describe = await sequelize.getQueryInterface().describeTable(name);
-    const comment = await getTableComment(item.type, sequelize, name);
+  let result;
+  try {
+    result = (await sequelize.getQueryInterface().showAllTables()) as any[];
+  } catch (e: any) {
+    vscode.window.showErrorMessage(
+      `获取数据库数据表列表失败： message=${e.message || e}`
+    );
+    throw e;
+  }
+
+  for (let name of result) {
+    if (item.type === "mssql" && typeof name === "object") {
+      if (name.schema !== item.options.schema) {
+        continue;
+      } else {
+        name = name.tableName;
+      }
+    }
+
+    let comment;
+    try {
+      comment = await getTableComment(item.type, sequelize, name, item);
+    } catch (e: any) {
+      vscode.window.showErrorMessage(
+        `获取数据表注释失败： table=${name}, message=${e.message || e}`
+      );
+      throw e;
+    }
     tables.push({
       name,
       comment,
-      // columns: describe,
     });
   }
 
@@ -117,16 +173,25 @@ export async function loadTables(context: vscode.ExtensionContext, item: any) {
 async function getTableComment(
   type: string,
   sequelize: Sequelize,
-  tableName: string
+  tableName: string,
+  item: any
 ) {
   switch (type) {
     case "mysql":
     case "mariadb":
       return await getMySQLTableComment(sequelize, tableName);
     case "postgres":
-      return await getPostgreSQLTableComment(sequelize, tableName);
+      return await getPostgreSQLTableComment(
+        sequelize,
+        tableName,
+        item.options.schema
+      );
     case "mssql":
-      return await getMSSQLTableComment(sequelize, tableName);
+      return await getMSSQLTableComment(
+        sequelize,
+        tableName,
+        item.options.schema
+      );
     default:
       throw new Error("Unsupported database type");
   }
@@ -141,21 +206,33 @@ async function getMySQLTableComment(sequelize: Sequelize, tableName: string) {
 
 async function getPostgreSQLTableComment(
   sequelize: Sequelize,
-  tableName: string
+  tableName: string,
+  schema: string
 ) {
   const rs: any = await sequelize.query(`
-        SELECT obj_description(('"public."' || '${tableName}')::regclass) AS comment;
+        SELECT obj_description(('${schema}.${tableName}')::regclass) AS comment;
     `);
   return rs[0]?.[0]?.comment;
 }
 
-async function getMSSQLTableComment(sequelize: Sequelize, tableName: string) {
+async function getMSSQLTableComment(
+  sequelize: Sequelize,
+  tableName: string,
+  schema: string
+) {
   const rs: any = await sequelize.query(`
-        SELECT ep.value AS comment
-        FROM sys.tables AS t
-        LEFT JOIN sys.extended_properties AS ep
-        ON ep.major_id = t.object_id
-        WHERE t.name = '${tableName}' AND ep.name = 'MS_Description';
+        SELECT 
+            obj.name AS table_name,
+            ep.value AS table_comment
+        FROM 
+            sys.tables obj
+        LEFT JOIN 
+            sys.extended_properties ep 
+            ON obj.object_id = ep.major_id 
+            AND ep.minor_id = 0  -- 0 表示表级注释
+        WHERE 
+            obj.name = '${tableName}'          -- 表名
+            AND SCHEMA_NAME(obj.schema_id) = '${schema}';  -- 模式名
     `);
-  return rs[0]?.[0]?.comment;
+  return rs[0]?.[0]?.table_comment;
 }
