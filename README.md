@@ -60,12 +60,16 @@ Visual Studio Code 代码生成器插件
    2. `tableInfo`结构
       ```typescript
       {
-        type: string;
-        allowNull: boolean;
-        defaultValue: string;
-        primaryKey: boolean;
-        autoIncrement: boolean;
+        name: string;
         comment: string | null;
+        columns: Array<{
+          type: string;
+          allowNull: boolean;
+          defaultValue: string;
+          primaryKey: boolean;
+          autoIncrement: boolean;
+          comment: string | null;
+        }>
       }
       ```
 5. 配置文件`main.json5`
@@ -234,10 +238,10 @@ Visual Studio Code 代码生成器插件
 
 ### 1.0.0
 
-- 支持数据库：mysql、mariadb（待测试）、postgres（待测试）、mssql（待测试）
+- 支持数据库：mysql、mariadb（未测试）、postgres、mssql
 - 支持批量生成
 - 以 js 为脚本语言
 - 模板格式类似`jsp`
 - 支持自定义脚本（`common/scripts/*`）
-- 支持简单的输入组件(`ui`)（进行中）
+- 支持简单的输入组件(`ui`)
 - 可添加非数据库模块（暂不支持添加字段）
