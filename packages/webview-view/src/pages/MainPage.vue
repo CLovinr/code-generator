@@ -85,11 +85,18 @@
             v-model:customerItems="customerItems"
             v-model="tableNames"
             :configDir="codeGenConfigDir"
+            :dbType="infoData.dbType"
             @onLoadTable="loadTemplates"
           />
         </vscode-panel-view>
         <vscode-panel-view id="uiParams" style="padding: 5px 0 0 0">
-          <UiParams ref="refUIParams" :uiParams="uiParams" v-model="uiValues" />
+          <UiParams
+            ref="refUIParams"
+            :templateName="tplName"
+            :uiProps="uiProps"
+            :uiParams="uiParams"
+            v-model="uiValues"
+          />
         </vscode-panel-view>
       </vscode-panels>
 
@@ -197,8 +204,10 @@ const tplDescription = computed(() => {
 });
 
 const uiParams = ref<any[]>([]);
+const uiProps = ref<any>({});
 const uiValues = ref<any>({});
 const refUIParams = ref();
+const infoData = ref<any>({});
 
 const codeGenConfigDir = ref("");
 const isInitCodeGenConfig = ref(false);
@@ -268,9 +277,11 @@ const loadTemplates = async () => {
       tplName.value = allTemplates.value?.[0];
     }
 
+    uiProps.value = result.uiProps || {};
     uiParams.value = result.uiParams || [];
     uiValues.value = result.uiValues || {};
     customerItems.value = result.customerItems || [];
+    infoData.value = result.info || {};
   } catch (err) {
     console.error(err);
   }

@@ -1,7 +1,12 @@
 <template>
   <div class="db-table-list">
     <div class="top-tool">
-      <VsTextField v-model="searchText" maxlength="128" placeholder="搜索" style="width: 260px;" />
+      <VsTextField
+        v-model="searchText"
+        maxlength="128"
+        placeholder="搜索"
+        style="width: 260px"
+      />
       <div v-if="!existsDBTables">无数据表</div>
       <vscode-button
         appearance="icon"
@@ -11,28 +16,36 @@
       >
         <i class="codicon codicon-sync"></i>
       </vscode-button>
-
-      <div v-if="!!modelValue?.length">已选数: {{ modelValue?.length }}</div>
+      <div v-if="dbType" style="color: gray; font-weight: bold">
+        {{ dbType }}
+      </div>
+      <div v-if="!!selectedCount">已选数: {{ selectedCount }}</div>
     </div>
     <div ref="refDataGrid" class="table-grid">
-      <vscode-data-grid aria-label="Basic" grid-template-columns="5fr 6fr 60px">
+      <vscode-data-grid aria-label="Basic" grid-template-columns="30px 5fr 6fr">
         <vscode-data-grid-row row-type="header">
           <vscode-data-grid-cell cell-type="columnheader" grid-column="1">
-            表名称
-          </vscode-data-grid-cell>
-          <vscode-data-grid-cell cell-type="columnheader" grid-column="2">
-            描述
-          </vscode-data-grid-cell>
-          <vscode-data-grid-cell cell-type="columnheader" grid-column="3">
             <VsCheckbox
               v-model="allChecked"
               :disabled="!!searchText || globalLoading"
             />
           </vscode-data-grid-cell>
+          <vscode-data-grid-cell cell-type="columnheader" grid-column="2">
+            表名称
+          </vscode-data-grid-cell>
+          <vscode-data-grid-cell cell-type="columnheader" grid-column="3">
+            描述
+          </vscode-data-grid-cell>
         </vscode-data-grid-row>
         <template v-for="item in customerItems" :key="item.id">
           <vscode-data-grid-row>
             <vscode-data-grid-cell grid-column="1">
+              <VsCheckbox
+                v-model="item.checked"
+                :disabled="!item.name || globalLoading"
+              />
+            </vscode-data-grid-cell>
+            <vscode-data-grid-cell grid-column="2">
               <div
                 style="
                   display: flex;
@@ -59,7 +72,7 @@
                 </vscode-button>
               </div>
             </vscode-data-grid-cell>
-            <vscode-data-grid-cell grid-column="2">
+            <vscode-data-grid-cell grid-column="3">
               <VsTextField
                 v-model="item.comment"
                 maxlength="512"
@@ -69,29 +82,23 @@
                 <i slot="start" class="codicon codicon-output" />
               </VsTextField>
             </vscode-data-grid-cell>
-            <vscode-data-grid-cell grid-column="3">
-              <VsCheckbox
-                v-model="item.checked"
-                :disabled="!item.name || globalLoading"
-              />
-            </vscode-data-grid-cell>
           </vscode-data-grid-row>
         </template>
         <template v-for="item in tableData" :key="item.name">
           <vscode-data-grid-row v-if="isMatch(item)">
             <vscode-data-grid-cell grid-column="1">
-              <i class="codicon codicon-table" style="margin-right: 5px" />
-              {{ item.name }}
-            </vscode-data-grid-cell>
-            <vscode-data-grid-cell grid-column="2">
-              <i class="codicon codicon-output" style="margin-right: 5px" />
-              {{ item.comment }}
-            </vscode-data-grid-cell>
-            <vscode-data-grid-cell grid-column="3">
               <VsCheckbox
                 v-model="checkedTables[item.name]"
                 :disabled="globalLoading"
               />
+            </vscode-data-grid-cell>
+            <vscode-data-grid-cell grid-column="2">
+              <i class="codicon codicon-table" style="margin-right: 5px" />
+              {{ item.name }}
+            </vscode-data-grid-cell>
+            <vscode-data-grid-cell grid-column="3">
+              <i class="codicon codicon-output" style="margin-right: 5px" />
+              {{ item.comment }}
             </vscode-data-grid-cell>
           </vscode-data-grid-row>
         </template>
@@ -100,7 +107,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { watch, ref, nextTick } from "vue";
+import { watch, ref, nextTick, computed } from "vue";
 import { storeToRefs } from "pinia";
 import _ from "lodash";
 import { useVsCodeApiStore } from "@/stores/vscode";
@@ -110,6 +117,9 @@ const props = defineProps({
   configDir: {
     type: String,
     required: true,
+  },
+  dbType: {
+    type: String,
   },
 });
 
@@ -140,6 +150,23 @@ const modelValue = defineModel<string[] | undefined>("modelValue");
 const customerItemsValue = defineModel<CustomerItem[] | undefined>(
   "customerItems"
 );
+
+const selectedCount = computed(() => {
+  let count = 0;
+  if (modelValue.value) {
+    count += modelValue.value.length;
+  }
+
+  if (customerItems.value) {
+    for (const item of customerItems.value) {
+      if (item.checked && item.name) {
+        count++;
+      }
+    }
+  }
+
+  return count;
+});
 
 watch(
   modelValue,
@@ -339,7 +366,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: left;
-  gap: 20px;
+  gap: 10px;
 }
 
 .table-grid {

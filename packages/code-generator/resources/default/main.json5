@@ -9,6 +9,7 @@
   ",
   ui: {
     attr: "formState",
+    labelWidth: 6, // 1~15
     params: [
       {
         var: "basePackageName",
@@ -83,7 +84,7 @@
   databases: {
     current: "local-mysql",
     items: {
-      "mysql01": {
+      "local-mysql": {
         type: "mysql",
         enable: true,
         initSqls: ["SET NAMES utf8mb4"],
@@ -133,6 +134,14 @@
             },
             authentication: {},
           },
+        },
+      },
+      "local-sqlite": {
+        type: "sqlite",
+        enable: true,
+        initSqls: [],
+        options: {
+          storage: "D:/.app-storage.db",
         },
       },
     },

@@ -33,7 +33,7 @@ const config = {
     fallback: {
       // 找不到而忽略的模块
       "pg-hstore": false,
-      "pg-native": false,
+      "pg-native": false
     },
   },
   module: {

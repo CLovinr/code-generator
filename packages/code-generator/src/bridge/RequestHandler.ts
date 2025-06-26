@@ -5,18 +5,22 @@ export class RequestHandler {
   private static view: vscode.WebviewView | undefined;
   private static idCount = 0;
   private static actions: any = {};
+  private static isRegisterActions = false;
 
   public static init(
     context: vscode.ExtensionContext,
     view: vscode.WebviewView
   ) {
     RequestHandler.view = view;
-    registerActions(
-      context,
-      (type: string, callback: (data: any) => Promise<any> | any) => {
-        RequestHandler.onAction(type, callback);
-      }
-    );
+    if (!RequestHandler.isRegisterActions) {
+      RequestHandler.isRegisterActions = true;
+      registerActions(
+        context,
+        (type: string, callback: (data: any) => Promise<any> | any) => {
+          RequestHandler.onAction(type, callback);
+        }
+      );
+    }
   }
 
   public static dispose() {

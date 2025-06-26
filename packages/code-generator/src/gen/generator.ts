@@ -142,17 +142,26 @@ export class CodeGenerator {
       }
     });
 
+    const labelWidth = this.config.ui?.labelWidth || 6;
     const uiParams = this.config.ui?.params || [];
     const uiValues = this.config.ui.values || {};
     const customerItems = this.config.customerItems || [];
+
+    const dbItem = this.getCurrentDBItem();
 
     return {
       templates,
       current: this.config.tplName,
       baseOutDir: this.config.baseOutDir,
+      uiProps: {
+        labelWidth,
+      },
       uiParams,
       uiValues,
       customerItems,
+      info: {
+        dbType: dbItem?.type,
+      },
     };
   }
 

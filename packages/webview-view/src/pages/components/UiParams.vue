@@ -4,7 +4,13 @@
       <template v-for="(item, index) in enabledUIParams" :key="item.var">
         <VsDivider v-if="index > 0" style="width: 50%" />
         <div class="form-item" :title="item.title">
-          <label class="w6">{{ item.label }}</label>
+          <label
+            :class="{
+              [`w${uiProps.labelWidth || 6}`]: true,
+              'no-label': item.label === '' || _.isNil(item.label),
+            }"
+            >{{ item.label }}</label
+          >
           <div class="field">
             <template v-if="item.type === 'checkbox'">
               <VsCheckbox
@@ -72,8 +78,15 @@ import {
 import { useVsCodeApiStore } from "@/stores/vscode";
 
 const props = defineProps({
+  uiProps: {
+    type: Object,
+    default: () => ({}),
+  },
   uiParams: {
     type: Array<any>,
+  },
+  templateName: {
+    type: String,
   },
 });
 
@@ -88,7 +101,12 @@ const enabledUIParams = computed(() => {
   const params: any = [];
   if (props.uiParams) {
     for (const p of props.uiParams) {
-      if (p.enable !== false) {
+      if (
+        p.enable !== false &&
+        (!props.templateName ||
+          !p.forTemplates ||
+          p.forTemplates.includes(props.templateName))
+      ) {
         params.push(p);
       }
     }

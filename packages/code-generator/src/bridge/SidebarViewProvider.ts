@@ -5,6 +5,8 @@ import { RequestHandler } from "./RequestHandler";
 
 export class SidebarViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "extension.sidebar";
+
+  private webviewView: vscode.WebviewView | undefined;
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly extensionUri: vscode.Uri // 插件所在路径
@@ -26,13 +28,22 @@ export class SidebarViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this.extensionUri], // 允许加载本地资源的路径
     };
 
-    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-    RequestHandler.init(this.context, webviewView);
-
+    this.webviewView = webviewView;
+    this.loadContent();
+    
     webviewView.webview.onDidReceiveMessage(RequestHandler.handleRequest);
     webviewView.onDidDispose(() => {
       RequestHandler.dispose();
     });
+  }
+
+  private loadContent() {
+    if (this.webviewView) {
+      this.webviewView.webview.html = this._getHtmlForWebview(
+        this.webviewView.webview
+      );
+      RequestHandler.init(this.context, this.webviewView);
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {

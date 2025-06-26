@@ -8,7 +8,18 @@ Visual Studio Code 代码生成器插件
 
 ## 2、扩展设置
 
-## 3、代码生成器说明
+## 3、测试情况
+
+1. 已测试系统
+   - Windows 10，Windows 11
+   - Ubuntu 22
+2. 已测试数据库
+   - `mysql`：5.7，8.0
+   - `postgresql`：17
+   - `mssql`：2012
+   - `sqlite`：v3
+
+## 4、代码生成器说明
 
 ### 基础说明
 
@@ -69,7 +80,7 @@ Visual Studio Code 代码生成器插件
           primaryKey: boolean;
           autoIncrement: boolean;
           comment: string | null;
-        }>
+        }>;
       }
       ```
 5. 配置文件`main.json5`
@@ -143,6 +154,14 @@ Visual Studio Code 代码生成器插件
           },
         },
       },
+      "local-sqlite": {
+        type: "sqlite",
+        enable: true,
+        initSqls: [],
+        options: {
+          storage: "D:/.app-storage.db",
+        },
+      },
     },
   },
 }
@@ -150,16 +169,10 @@ Visual Studio Code 代码生成器插件
 
 - `current`：当前使用的数据库
 - `items`：数据库配置项
-  - `type`：数据库类型，目前仅支持：`mysql`, `postgres`, `mariadb`, `mssql`
+  - `type`：数据库类型，目前仅支持：`mysql`, `postgres`, `mariadb`, `mssql`, `sqlite`
   - `enable`：是否启用，当为 false 时，则不会访问数据库获取数据表
   - `initSqls`：连接成功后，初始执行的 sql 语句
   - `options`：数据库连接配置信息
-
-#### 已测试的数据库：
-
-- `mysql`：5.7，8.0
-- `postgresql`：17
-- `mssql`：2012
 
 ### 自定义参数输入
 
@@ -172,6 +185,7 @@ Visual Studio Code 代码生成器插件
         var: "prop1",
         label: "参数1",
         type: "checkbox",
+        forTemplates: ["MybatisPlus"],
         default: {},
         required: false,
         options: [
@@ -228,17 +242,18 @@ Visual Studio Code 代码生成器插件
       - `maxlength`：最大输入字符数
     - 多行输入（`textarea`）：变量为输入值
       - `maxlength`：最大输入字符数
+  - `forTemplates` 可设置对哪些模板生效
   - `default`：默认值
   - `required`：是否必填项
   - `title`：鼠标放置后显示的提示内容
 
-## 4、已知问题
+## 5、已知问题
 
-## 5、发布说明
+## 6、发布说明
 
 ### 1.0.0
 
-- 支持数据库：mysql、mariadb（未测试）、postgres、mssql
+- 支持数据库：mysql、mariadb（未测试）、postgres、mssql、sqlite
 - 支持批量生成
 - 以 js 为脚本语言
 - 模板格式类似`jsp`

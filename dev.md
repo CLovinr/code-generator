@@ -24,3 +24,5 @@ pnpm package
 
 - vscode 风格组件：[vscode-webview-ui-toolkit](https://github.com/microsoft/vscode-webview-ui-toolkit)
 - vscode 图标：[vscode-codicons](https://github.com/microsoft/vscode-codicons)
+- vscode 插件例子：[vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples)
+- vscode 插件开发帮助文档：[api](https://code.visualstudio.com/api)

@@ -34,7 +34,7 @@ body {
     font-weight: bold;
     text-align: right;
 
-    @for $i from 1 through 10 {
+    @for $i from 1 through 15 {
       &.w#{$i} {
         width: calc(var(--vscode-font-size) * $i);
       }
@@ -42,6 +42,10 @@ body {
 
     &::after {
       content: "：";
+    }
+
+    &.no-label::after {
+      content: unset;
     }
 
     &.left {

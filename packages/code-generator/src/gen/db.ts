@@ -14,6 +14,13 @@ import mysql2 from "mysql2";
 import pg from "pg";
 import mariadb from "mariadb";
 import * as tedious from "tedious"; // mssql
+import { loadSqlite3 } from "./sqlite3";
+
+let sqlite3: any = undefined;
+
+export async function initDrivers() {
+  sqlite3 = await loadSqlite3();
+}
 
 Sequelize.beforeInit((config: Config, options: Options) => {
   // 解决打包后，运行期间找不到依赖的问题
@@ -24,7 +31,6 @@ Sequelize.beforeInit((config: Config, options: Options) => {
   } else if (options.dialect === "mariadb") {
     options.dialectModule = mariadb;
   } else if (options.dialect === "mssql") {
-    console.log(`tedious: `, tedious);
     options.dialectModule = tedious;
     if (options.schema) {
       if (!options.dialectOptions) {
@@ -39,6 +45,19 @@ Sequelize.beforeInit((config: Config, options: Options) => {
 
       dialectOptions.options.schema = options.schema;
     }
+  } else if (options.dialect === "sqlite") {
+    options.dialectModule = sqlite3;
+    if (!options.dialectOptions) {
+      options.dialectOptions = {};
+    }
+
+    const dialectOptions: any = options.dialectOptions;
+
+    if (!dialectOptions.options) {
+      dialectOptions.options = {};
+    }
+
+    dialectOptions.options.storage = options.storage;
   }
 
   if (!options.dialectModule) {
@@ -48,7 +67,7 @@ Sequelize.beforeInit((config: Config, options: Options) => {
 
 async function newSequelize(item: any) {
   if (
-    !["mysql", "postgres", "mariadb", "mssql"].includes(
+    !["mysql", "postgres", "mariadb", "mssql", "sqlite"].includes(
       item.type as string
     )
   ) {
@@ -157,7 +176,7 @@ export async function loadTables(context: vscode.ExtensionContext, item: any) {
       vscode.window.showErrorMessage(
         `获取数据表注释失败： table=${name}, message=${e.message || e}`
       );
-      throw e;
+      // throw e;
     }
     tables.push({
       name,
@@ -192,6 +211,8 @@ async function getTableComment(
         tableName,
         item.options.schema
       );
+    case "sqlite":
+      return undefined;  // sqlite不支持表注释
     default:
       throw new Error("Unsupported database type");
   }
