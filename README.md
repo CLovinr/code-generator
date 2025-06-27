@@ -6,7 +6,21 @@ Visual Studio Code 代码生成器插件
 
 - Visual Studio Code v1.90.0+
 
-## 2、扩展设置
+## 2、效果展示
+
+![](./docs/images/samples/1.png)
+
+![](./docs/images/samples/2.png)
+
+![](./docs/images/samples/3.png)
+
+![](./docs/images/samples/4.png)
+
+![](./docs/images/samples/5.png)
+
+![](./docs/images/samples/6.png)
+
+![](./docs/images/samples/7.png)
 
 ## 3、测试情况
 
@@ -24,6 +38,7 @@ Visual Studio Code 代码生成器插件
 ### 基础说明
 
 1. 文件后缀为`.jstpl`或（`.jsin`，可导入文件），模板格式类似`jsp`，只是脚本语言为`js`。
+   ![jstpl](./docs/images/jstpl.png)
 2. `common/scripts`中的文件为全局可调用的 js 脚本
    1. 脚本文件名必须为合法的 js 变量名
    2. 脚本文件名不要与系统内置成员重名
@@ -159,7 +174,7 @@ Visual Studio Code 代码生成器插件
         enable: true,
         initSqls: [],
         options: {
-          storage: "D:/.app-storage.db",
+          storage: "./sample-files/test-sqlite3.db",
         },
       },
     },

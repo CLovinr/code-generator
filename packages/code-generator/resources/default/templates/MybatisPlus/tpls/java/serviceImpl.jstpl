@@ -1,6 +1,7 @@
 <%@
-//设置输出文件
-out="java/${basePackagePath}/service/impl/${moduleName}ServiceImpl.java"
+    //设置输出文件
+    out="java/${basePackagePath}/service/impl/${moduleName}ServiceImpl.java"
+    write="${formState.java1.service}"
 %>
 package <%=basePackageName%>.service.impl;
 

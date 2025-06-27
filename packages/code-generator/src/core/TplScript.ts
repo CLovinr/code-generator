@@ -164,7 +164,8 @@ function genScript(
             }
             switch (name) {
               case "out": //设置输出文件
-                outPath = path.join(baseOutDir, attrValue);
+                // outPath = path.join(baseOutDir, attrValue);
+                outPath = path.resolve(baseOutDir, attrValue);
                 break;
               case "write":
                 if (

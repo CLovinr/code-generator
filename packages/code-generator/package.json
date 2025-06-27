@@ -22,6 +22,10 @@
     "代码生成器"
   ],
   "main": "./dist/extension.js",
+  "galleryBanner": {
+    "color": "#6666ff",
+    "theme": "dark"
+  },
   "scripts": {
     "compile": "pnpm check-types && webpack --mode none",
     "check-types": "tsc --noEmit",

@@ -12,9 +12,9 @@ function forContents(context: vscode.ExtensionContext) {
   });
 
   // 注册配置项
-  vscode.workspace
-    .getConfiguration()
-    .update("jstpl.defaultTextColor", "#bbbbbb", true);
+  // vscode.workspace
+  //   .getConfiguration()
+  //   .update("jstpl.defaultTextColor", "#bbbbbb", true);
 
   // 监听编辑器变化
   let activeEditor = vscode.window.activeTextEditor;
@@ -91,9 +91,9 @@ function forTags(context: vscode.ExtensionContext) {
   });
 
   // 注册配置项
-  vscode.workspace
-    .getConfiguration()
-    .update("jstpl.defaultTagColor", "#4d4d86", true);
+  // vscode.workspace
+  //   .getConfiguration()
+  //   .update("jstpl.defaultTagColor", "#4d4d86", true);
 
   // 监听编辑器变化
   let activeEditor = vscode.window.activeTextEditor;

@@ -1,6 +1,7 @@
 <%@
-//设置输出文件
-out="java/${basePackagePath}/dao/${moduleName}Dao.java"
+    //设置输出文件
+    out="java/${basePackagePath}/dao/${moduleName}Dao.java"
+    write="${formState.java2.dao}"
 %>
 package <%=basePackageName%>.dao;
 

@@ -172,7 +172,7 @@ export class CodeGenerator {
         tables: null,
       };
     }
-    const tables = await loadTables(this.context, item);
+    const tables = await loadTables(this.context, this.configDir, item);
     return {
       tables,
     };
@@ -180,7 +180,7 @@ export class CodeGenerator {
 
   public async listTableInfo(tableName: string) {
     const item = this.getCurrentDBItem();
-    return await listTableInfo(this.context, item, tableName);
+    return await listTableInfo(this.context, this.configDir, item, tableName);
   }
 
   public get generating() {

@@ -1,6 +1,7 @@
 <%@
-//设置输出文件
-out="resources/mapper/${moduleName}Mapper.xml"
+    //设置输出文件
+    out="resources/mapper/${moduleName}Mapper.xml"
+    write="${formState.java2.dao}"
 %>
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">

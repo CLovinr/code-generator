@@ -1,8 +1,11 @@
 <%@
-//设置输出文件
-out="java/${basePackagePath}/controller/${moduleName}Controller.java"
+    //设置输出文件
+    out="java/${basePackagePath}/controller/${moduleName}Controller.java"
+    write="${formState.java1.controller}"
 %>
 package <%=basePackageName%>.controller;
+
+<%@ include="test" %>
 
 <%
 const serviceName = firstLowerModuleName + 'Service';

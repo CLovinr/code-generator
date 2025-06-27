@@ -16,6 +16,9 @@ import mariadb from "mariadb";
 import * as tedious from "tedious"; // mssql
 import { loadSqlite3 } from "./sqlite3";
 
+import path from "path";
+import fs from "fs";
+
 let sqlite3: any = undefined;
 
 export async function initDrivers() {
@@ -65,7 +68,7 @@ Sequelize.beforeInit((config: Config, options: Options) => {
   }
 });
 
-async function newSequelize(item: any) {
+async function newSequelize(configDir: string, item: any) {
   if (
     !["mysql", "postgres", "mariadb", "mssql", "sqlite"].includes(
       item.type as string
@@ -76,11 +79,18 @@ async function newSequelize(item: any) {
     throw new Error(errmsg);
   }
 
+  if (item.type === "sqlite") {
+    const storage = path.resolve(configDir, item.options.storage);
+    if (!fs.existsSync(storage)) {
+      throw new Error(`sqlite db file not exists: ${item.options.storage}`);
+    }
+    item.options.storage = storage;
+  }
+
   try {
     const sequelize = new Sequelize({
       ...item.options,
       dialect: item.type, //'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'db2' | 'snowflake' | 'oracle';
-      config: {},
     });
 
     await sequelize.authenticate();
@@ -102,6 +112,7 @@ async function newSequelize(item: any) {
 
 export async function listTableInfo(
   context: vscode.ExtensionContext,
+  configDir: string,
   item: any,
   tableName: string
 ): Promise<{
@@ -109,7 +120,7 @@ export async function listTableInfo(
   comment?: string;
   columns: ColumnDescription[];
 }> {
-  const sequelize = await newSequelize(item);
+  const sequelize = await newSequelize(configDir, item);
   let describe;
   try {
     describe = await sequelize.getQueryInterface().describeTable(tableName);
@@ -146,8 +157,12 @@ export async function listTableInfo(
   };
 }
 
-export async function loadTables(context: vscode.ExtensionContext, item: any) {
-  const sequelize = await newSequelize(item);
+export async function loadTables(
+  context: vscode.ExtensionContext,
+  configDir: string,
+  item: any
+) {
+  const sequelize = await newSequelize(configDir, item);
 
   const tables: any[] = [];
   let result;
@@ -212,7 +227,7 @@ async function getTableComment(
         item.options.schema
       );
     case "sqlite":
-      return undefined;  // sqlite不支持表注释
+      return undefined; // sqlite不支持表注释
     default:
       throw new Error("Unsupported database type");
   }

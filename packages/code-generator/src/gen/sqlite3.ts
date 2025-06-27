@@ -9,15 +9,6 @@ const originalRequire = Module.prototype.require;
 
 Module.prototype.require = function (modulePath: string) {
   if (modulePath.endsWith("node_sqlite3.node")) {
-    // const adjustedPath = path.join(
-    //   getBasePath(),
-    //   "resources",
-    //   path.sep,
-    //   "napi-nodes",
-    //   `${process.platform}-${process.arch}`,
-    //   "node_sqlite3.node"
-    // );
-    // return originalRequire.call(this, adjustedPath);
     return loadSqlite3Node();
   }
   return originalRequire.call(this, modulePath);

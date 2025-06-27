@@ -1,6 +1,7 @@
 <%@
-//设置输出文件
-out="java/${basePackagePath}/entity/${moduleName}.java"
+    //设置输出文件
+    out="java/${basePackagePath}/entity/${moduleName}.java"
+    write="${formState.java2.entity}"
 %>
 package <%=basePackageName%>.entity;
 

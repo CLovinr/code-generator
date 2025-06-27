@@ -9,7 +9,7 @@
     "watch:extension": "pnpm -F code-generator watch",
     "watch:webview": "pnpm -F webview-view watch",
     "watch": "npm-run-all -p watch:extension watch:webview",
-    "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator/ && cpx ./README.md ./packages/code-generator/ && cpx ./CHANGELOG.md ./packages/code-generator/",
+    "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator/ && cpx ./README.md ./packages/code-generator/ && cpx ./CHANGELOG.md ./packages/code-generator/ && cpx ./docs/**/* ./packages/code-generator/docs/",
     "clean": "rimraf ./packages/code-generator/dist",
     "package:extension": "pnpm -F code-generator vsce:package",
     "package": "pnpm clean && pnpm copy:info-files && pnpm build:webview && pnpm package:extension"
