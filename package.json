@@ -6,12 +6,12 @@
   "scripts": {
     "dev:webview": "pnpm -F webview-view dev",
     "build:webview": "pnpm -F webview-view build",
-    "watch:extension": "pnpm -F code-generator watch",
+    "watch:extension": "pnpm -F code-generator-dusk watch",
     "watch:webview": "pnpm -F webview-view watch",
     "watch": "npm-run-all -p watch:extension watch:webview",
-    "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator/ && cpx ./README.md ./packages/code-generator/ && cpx ./CHANGELOG.md ./packages/code-generator/ && cpx ./docs/**/* ./packages/code-generator/docs/",
-    "clean": "rimraf ./packages/code-generator/dist",
-    "package:extension": "pnpm -F code-generator vsce:package",
+    "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator-dusk/ && cpx ./README.md ./packages/code-generator-dusk/ && cpx ./CHANGELOG.md ./packages/code-generator-dusk/ && cpx ./docs/**/* ./packages/code-generator-dusk/docs/",
+    "clean": "rimraf ./packages/code-generator-dusk/dist",
+    "package:extension": "pnpm -F code-generator-dusk vsce:package",
     "package": "pnpm clean && pnpm copy:info-files && pnpm build:webview && pnpm package:extension"
   },
   "keywords": [

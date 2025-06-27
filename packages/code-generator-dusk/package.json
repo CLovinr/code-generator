@@ -1,6 +1,6 @@
 {
-  "name": "code-generator",
-  "displayName": "code generator",
+  "name": "code-generator-dusk",
+  "displayName": "code generator dusk",
   "icon": "resources/icon.png",
   "publisher": "clovinr",
   "description": "代码生成器的黄昏，新人少用，老人慎用。",
