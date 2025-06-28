@@ -1,6 +1,6 @@
 # code generator
 
-Visual Studio Code 代码生成器插件
+Visual Studio Code 代码生成器插件（地址：[code generator dusk](https://marketplace.visualstudio.com/items?itemName=clovinr.code-generator-dusk)）。
 
 ## 1、安装要求
 
