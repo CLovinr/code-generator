@@ -73,7 +73,7 @@ function genScript(
       [TYPE_LOCAL, TYPE_GLOBAL, TYPE_CONFIG].includes(preItem.type)
     ) {
       // 去掉一个换行符
-      content = content.replace(/^[\t ]*\n/, "");
+      content = content.replace(/^[\t ]*\r?\n/, "");
     }
 
     return content;
@@ -83,7 +83,7 @@ function genScript(
     const nextItem = lexer2.getItem(index + 1);
     if (nextItem?.type === TYPE_CONTENT && typeof nextItem.value === "string") {
       // 去掉一个换行符
-      nextItem.value = nextItem.value.replace(/^[\t ]*\n/, "");
+      nextItem.value = nextItem.value.replace(/^[\t ]*\r?\n/, "");
     }
   };
 
