@@ -283,7 +283,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 
 ## 6、发布说明
 
-### 1.0.1
+### 1.0.2
 
 - 较全面测试数据库：mysql、mariadb、postgres、mssql、sqlite
   - `mysql`：5.7，8.0
