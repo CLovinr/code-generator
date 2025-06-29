@@ -297,7 +297,7 @@ async function getPostgreSQLTableComment(
       type: QueryTypes.SELECT,
     }
   );
-  return rs[0]?.[0]?.comment;
+  return rs[0]?.comment;
 }
 
 async function getMSSQLTableComment(
@@ -324,5 +324,5 @@ async function getMSSQLTableComment(
       type: QueryTypes.SELECT,
     }
   );
-  return rs[0]?.[0]?.table_comment;
+  return rs[0]?.table_comment;
 }
