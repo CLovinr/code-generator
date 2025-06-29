@@ -119,6 +119,22 @@
           },
         },
       },
+      'local-mariadb': {
+        type: 'mariadb',
+        enable: true,
+        initSqls: ['SET NAMES utf8mb4'],
+        options: {
+          host: 'localhost',
+          port: 4306,
+          username: 'user',
+          password: 'password',
+          database: 'demo',
+          ssl: false,
+          dialectOptions: {
+            insecureAuth: false
+          }
+        }
+      },
       "local-pg": {
         type: "postgres",
         enable: true,

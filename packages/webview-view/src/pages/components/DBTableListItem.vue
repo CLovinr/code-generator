@@ -16,8 +16,8 @@
       >
         <i class="codicon codicon-sync"></i>
       </vscode-button>
-      <div v-if="dbType" style="color: gray; font-weight: bold">
-        {{ dbType }}
+      <div v-if="infoData?.dbType" style="color: gray; font-weight: bold">
+        {{ infoData.dbType }}（{{ infoData.dbKey }}）
       </div>
       <div v-if="!!selectedCount">已选数: {{ selectedCount }}</div>
     </div>
@@ -118,8 +118,8 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  dbType: {
-    type: String,
+  infoData: {
+    type: Object,
   },
 });
 

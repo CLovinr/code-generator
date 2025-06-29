@@ -8,7 +8,7 @@ export function registerJstplFileIconProvider(
 //     .getConfiguration("workbench")
 //     .update(
 //       "iconTheme",
-//       "code-generator.jstpl-icon-theme",
+//       "code-generator-dusk.jstpl-icon-theme",
 //       vscode.ConfigurationTarget.Global
 //     );
 }

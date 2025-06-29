@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 
+import _ from "lodash";
+
 // https://github.com/sequelize/sequelize
 // import { Sequelize } from "@sequelize/core";
 // import { MariaDbDialect } from "@sequelize/mariadb";
@@ -8,7 +10,13 @@ import * as vscode from "vscode";
 // import { PostgresDialect } from "@sequelize/postgres";
 // import { SqliteDialect } from "@sequelize/sqlite3";
 // import { Db2Dialect } from "@sequelize/db2";
-import { Sequelize, Config, Options, type ColumnDescription } from "sequelize";
+import {
+  Sequelize,
+  QueryTypes,
+  Config,
+  Options,
+  type ColumnDescription,
+} from "sequelize";
 
 import mysql2 from "mysql2";
 import pg from "pg";
@@ -85,6 +93,8 @@ async function newSequelize(configDir: string, item: any) {
       throw new Error(`sqlite db file not exists: ${item.options.storage}`);
     }
     item.options.storage = storage;
+  } else if (item.type === "mariadb") {
+    item.options.schema = item.options.database;
   }
 
   try {
@@ -176,8 +186,16 @@ export async function loadTables(
   }
 
   for (let name of result) {
-    if (item.type === "mssql" && typeof name === "object") {
-      if (name.schema !== item.options.schema) {
+    if (/*item.type === "mssql" && */ typeof name === "object") {
+      if (!name.schema || !name.tableName) {
+        console.warn(`获取数据表错误，暂不支持的格式：`, JSON.stringify(name));
+        continue;
+      }
+
+      if (
+        name.schema !== item.options.schema &&
+        !_.isNil(item.options.schema)
+      ) {
         continue;
       } else {
         name = name.tableName;
@@ -212,8 +230,17 @@ async function getTableComment(
 ) {
   switch (type) {
     case "mysql":
+      return await getMySQLTableComment(
+        sequelize,
+        tableName,
+        item.options.database
+      );
     case "mariadb":
-      return await getMySQLTableComment(sequelize, tableName);
+      return await getMariadbTableComment(
+        sequelize,
+        tableName,
+        item.options.database
+      );
     case "postgres":
       return await getPostgreSQLTableComment(
         sequelize,
@@ -233,11 +260,28 @@ async function getTableComment(
   }
 }
 
-async function getMySQLTableComment(sequelize: Sequelize, tableName: string) {
+async function getMySQLTableComment(
+  sequelize: Sequelize,
+  tableName: string,
+  database: string
+) {
   const rs: any = await sequelize.query(
-    `SHOW TABLE STATUS LIKE '${tableName}';`
+    `SELECT TABLE_COMMENT FROM information_schema.tables
+     WHERE TABLE_SCHEMA = '${database}'
+     AND TABLE_NAME = '${tableName}';`,
+    {
+      type: QueryTypes.SELECT,
+    }
   );
-  return rs[0]?.[0]?.Comment;
+  return rs[0]?.TABLE_COMMENT;
+}
+
+async function getMariadbTableComment(
+  sequelize: Sequelize,
+  tableName: string,
+  database: string
+) {
+  return await getMySQLTableComment(sequelize, tableName, database);
 }
 
 async function getPostgreSQLTableComment(
@@ -245,9 +289,14 @@ async function getPostgreSQLTableComment(
   tableName: string,
   schema: string
 ) {
-  const rs: any = await sequelize.query(`
+  const rs: any = await sequelize.query(
+    `
         SELECT obj_description(('${schema}.${tableName}')::regclass) AS comment;
-    `);
+    `,
+    {
+      type: QueryTypes.SELECT,
+    }
+  );
   return rs[0]?.[0]?.comment;
 }
 
@@ -256,7 +305,8 @@ async function getMSSQLTableComment(
   tableName: string,
   schema: string
 ) {
-  const rs: any = await sequelize.query(`
+  const rs: any = await sequelize.query(
+    `
         SELECT 
             obj.name AS table_name,
             ep.value AS table_comment
@@ -269,6 +319,10 @@ async function getMSSQLTableComment(
         WHERE 
             obj.name = '${tableName}'          -- 表名
             AND SCHEMA_NAME(obj.schema_id) = '${schema}';  -- 模式名
-    `);
+    `,
+    {
+      type: QueryTypes.SELECT,
+    }
+  );
   return rs[0]?.[0]?.table_comment;
 }

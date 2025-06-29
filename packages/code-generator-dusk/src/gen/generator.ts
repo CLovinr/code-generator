@@ -160,7 +160,10 @@ export class CodeGenerator {
       uiValues,
       customerItems,
       info: {
+        dbKey: dbItem?.key,
         dbType: dbItem?.type,
+        dbHost: dbItem?.options?.host,
+        dbPort: dbItem?.options?.port
       },
     };
   }
@@ -213,7 +216,7 @@ export class CodeGenerator {
   ) {
     try {
       this._generating = true;
-      await this.doStartGenCode(options, items);
+      return await this.doStartGenCode(options, items);
     } finally {
       this._generating = false;
     }

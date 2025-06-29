@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 发布说明
 
+### 1.0.1
+
+- 较全面测试数据库：mysql、mariadb、postgres、mssql、sqlite
+  - `mysql`：5.7，8.0
+  - `postgresql`：17
+  - `mssql`：2012，2017，2019，2022
+  - `sqlite`：v3
+  - `mariadb`：11.8.2
+- 修复模板文件存在`\r\n`导致换行出现问题的问题
+- 执行代码生成时，返回结果为空导致报错的问题
+
 ### 1.0.0
 
 - 支持数据库：mysql、mariadb（未测试）、postgres、mssql、sqlite

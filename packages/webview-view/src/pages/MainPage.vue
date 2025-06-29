@@ -85,7 +85,7 @@
             v-model:customerItems="customerItems"
             v-model="tableNames"
             :configDir="codeGenConfigDir"
-            :dbType="infoData.dbType"
+            :infoData="infoData"
             @onLoadTable="loadTemplates"
           />
         </vscode-panel-view>
@@ -119,7 +119,7 @@
             {{ isGenerating ? generatingPercent || "生成中..." : "开始生成" }}
           </VsButton>
           <VsButton
-            :disabled="!logMessages.length"
+            :disabled="!logMessages?.length"
             appearance="secondary"
             @click="logMessages = []"
           >
@@ -406,9 +406,12 @@ const startGenCode = async () => {
       uiValues: _.cloneDeep(uiValues.value),
     });
 
-    logMessages.value = result.log;
-
-    updateGenerateResultInfo(result.state);
+    if (!result) {
+      console.warn("startGenCode no result!!!");
+    } else {
+      logMessages.value = result.log;
+      updateGenerateResultInfo(result.state);
+    }
   } finally {
     isGenerating.value = false;
     globalLoading.value = false;

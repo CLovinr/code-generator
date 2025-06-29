@@ -30,8 +30,9 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 2. 已测试数据库
    - `mysql`：5.7，8.0
    - `postgresql`：17
-   - `mssql`：2012
+   - `mssql`：2012，2017，2019，2022
    - `sqlite`：v3
+   - `mariadb`：11.8.2
 
 ## 4、代码生成器说明
 
@@ -130,6 +131,22 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
           ssl: false,
           dialectOptions: {
             // https://github.com/sidorares/node-mysql2
+            insecureAuth: false,
+          },
+        },
+      },
+      "local-mariadb": {
+        type: "mariadb",
+        enable: true,
+        initSqls: ["SET NAMES utf8mb4"],
+        options: {
+          host: "localhost",
+          port: 4306,
+          username: "user",
+          password: "password",
+          database: "demo",
+          ssl: false,
+          dialectOptions: {
             insecureAuth: false,
           },
         },
@@ -265,6 +282,17 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ## 5、已知问题
 
 ## 6、发布说明
+
+### 1.0.1
+
+- 较全面测试数据库：mysql、mariadb、postgres、mssql、sqlite
+  - `mysql`：5.7，8.0
+  - `postgresql`：17
+  - `mssql`：2012，2017，2019，2022
+  - `sqlite`：v3
+  - `mariadb`：11.8.2
+- 修复模板文件存在`\r\n`导致换行出现问题的问题
+- 执行代码生成时，返回结果为空导致报错的问题
 
 ### 1.0.0
 

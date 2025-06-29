@@ -12,10 +12,10 @@
 			// "runtimeExecutable": "${execPath}",
 			"args": [
 				// "--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}/packages/code-generator"
+				"--extensionDevelopmentPath=${workspaceFolder}/packages/code-generator-dusk"
 			],
 			"outFiles": [
-				"${workspaceFolder}/packages/code-generator/dist/**/*.js"
+				"${workspaceFolder}/packages/code-generator-dusk/dist/**/*.js"
 			],
 			"preLaunchTask": "watchScripts"
 		}

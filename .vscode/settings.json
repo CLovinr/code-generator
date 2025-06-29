@@ -12,13 +12,18 @@
 	"typescript.tsc.autoDetect": "off",
 	"cSpell.words": [
 		"browserify",
+		"chenyg",
+		"errmsg",
 		"jsin",
 		"jstpl",
 		"maxlength",
 		"mkdirs",
+		"Mulan",
 		"Mybatis",
 		"oracledb",
 		"pinia",
+		"regclass",
+		"Sqls",
 		"sqltools",
 		"yarnrc"
 	]
