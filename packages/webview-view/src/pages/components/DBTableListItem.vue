@@ -17,7 +17,7 @@
         <i class="codicon codicon-sync"></i>
       </vscode-button>
       <div v-if="infoData?.dbType" style="color: gray; font-weight: bold">
-        {{ infoData.dbType }}（{{ infoData.dbKey }}）
+        {{ infoData.dbType }}({{ infoData.dbKey }})
       </div>
       <div v-if="!!selectedCount">已选数: {{ selectedCount }}</div>
     </div>
@@ -366,7 +366,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: left;
-  gap: 10px;
+  gap: 6px;
 }
 
 .table-grid {

@@ -10,6 +10,8 @@ import _ from "lodash";
 // import { PostgresDialect } from "@sequelize/postgres";
 // import { SqliteDialect } from "@sequelize/sqlite3";
 // import { Db2Dialect } from "@sequelize/db2";
+
+// https://github.com/sequelize/sequelize
 import {
   Sequelize,
   QueryTypes,
@@ -18,11 +20,11 @@ import {
   type ColumnDescription,
 } from "sequelize";
 
-import mysql2 from "mysql2";
+import mysql2 from "mysql2"; // https://github.com/sidorares/node-mysql2
 import pg from "pg";
 import mariadb from "mariadb";
 import * as tedious from "tedious"; // mssql
-import { loadSqlite3 } from "./sqlite3";
+import { loadSqlite3 } from "./driver-match";
 
 import path from "path";
 import fs from "fs";

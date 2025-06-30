@@ -338,6 +338,7 @@ export class CodeGenerator {
         total: number;
         success: number;
         failed: number;
+        writeFileCount: number;
       }>,
     };
 
@@ -347,6 +348,7 @@ export class CodeGenerator {
         total: tplPaths.length,
         success: 0,
         failed: 0,
+        writeFileCount: 0,
       };
       state.tasks.push(task);
     }
@@ -466,7 +468,7 @@ export class CodeGenerator {
                 );
                 noticeProgress();
               } else {
-                globalContext.console.log("write file:", outFile);
+                globalContext.console.info("write file:", outFile);
 
                 noticeProgress();
 
@@ -477,6 +479,7 @@ export class CodeGenerator {
                 fs.writeFileSync(outFile, content, {
                   encoding: outEncoding,
                 });
+                task.writeFileCount ++;
               }
 
               task.success++;
@@ -499,9 +502,9 @@ export class CodeGenerator {
           noticeProgress();
         } finally {
           if (task.total === task.success) {
-            globalContext.console.success(`【成功】${item.name}`);
+            globalContext.console.success(`【成功】${item.name}，输出文件数：${task.writeFileCount}`);
           } else {
-            globalContext.console.warn(`【未成功】${item.name}`);
+            globalContext.console.warn(`【未成功】${item.name}，输出文件数：${task.writeFileCount}`);
           }
         }
 

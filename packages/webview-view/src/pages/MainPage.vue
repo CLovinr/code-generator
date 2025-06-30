@@ -341,8 +341,10 @@ const updateGenerateResultInfo = (state: any) => {
   let success = 0;
   let partialSuccess = 0;
   let failed = 0;
+  let writeFileCount = 0;
   for (let i = 0; i < state.tasks.length; i++) {
     const task = state.tasks[i];
+    writeFileCount += task.writeFileCount;
     if (task.success === 0 && task.failed === 0) {
       continue;
     }
@@ -356,7 +358,7 @@ const updateGenerateResultInfo = (state: any) => {
     }
   }
 
-  generateResultInfo.value = `总数:${total} | 成功数:${success} | 部分成功数:${partialSuccess} | 失败数:${failed}`;
+  generateResultInfo.value = `总数:${total} | 成功数:${success} | 部分成功数:${partialSuccess} | 失败数:${failed}；输出文件总数:${writeFileCount} `;
 };
 
 const selectSaveDir = async () => {
@@ -457,6 +459,8 @@ const getLogColor = (item: any) => {
     return "red";
   } else if (item.type === "success") {
     return "green";
+  } else if (item.type === "info") {
+    return "darkseagreen";
   }
 };
 
