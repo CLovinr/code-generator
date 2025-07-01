@@ -3,7 +3,7 @@
 Visual Studio Code 代码生成器插件（地址：[code generator dusk](https://marketplace.visualstudio.com/items?itemName=clovinr.code-generator-dusk)）。
 
 - github：[https://github.com/CLovinr/code-generator](https://github.com/CLovinr/code-generator)
-- gitee：[https://gitee.com/CLovinr/code-generator](https://gitee.com/CLovinr/code-generator
+- gitee：[https://gitee.com/CLovinr/code-generator](https://gitee.com/CLovinr/code-generator)
 
 ## 1、安装要求
 
