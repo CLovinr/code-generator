@@ -6,6 +6,16 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 发布说明
 
+### 1.0.3
+
+- 显示代码生成输出文件数量信息。
+- 打包发布时，自动将`README.md`文件中的图片连接改为`https://cdn.jsdelivr.net/gh/`前缀，以便中国大陆可以正常访问。
+- 完善全局设置板块，`${expression}`支持表达式，如：`out = "${formState.var1 && formState.var2}"`。
+- 添加的模块可上下移动排序。
+- 删除添加的模块时，弹出确认框。
+- 搜索可过滤添加的模块，且搜索忽略大小写。
+- 可折叠日志板块。
+
 ### 1.0.2
 
 - 较全面测试数据库：mysql、mariadb、postgres、mssql、sqlite

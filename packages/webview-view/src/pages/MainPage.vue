@@ -87,6 +87,9 @@
             :configDir="codeGenConfigDir"
             :infoData="infoData"
             @onLoadTable="loadTemplates"
+            :style="{
+              height: hideLog ? 'calc(100vh - 615px + 350px)' : '350px',
+            }"
           />
         </vscode-panel-view>
         <vscode-panel-view id="uiParams" style="padding: 5px 0 0 0">
@@ -102,7 +105,7 @@
 
       <VsDivider />
       <div class="form-item left no-margin">
-        <div style="display: flex; align-items: center; gap: 5px">
+        <div style="display: flex; align-items: center; gap: 5px;width: 100%;">
           <VsButton
             :disabled="globalLoading || isGenerating"
             @click="addCustomerItem"
@@ -125,13 +128,22 @@
           >
             清除
           </VsButton>
+          <div style="flex: 1; display: flex; justify-content: right">
+            <VsCheckbox v-model="hideLog">折叠</VsCheckbox>
+          </div>
         </div>
       </div>
 
       <VsDivider />
       <div class="form-item vertical no-margin">
         <label class="left">执行日志</label>
-        <div ref="refLogContainer" class="log-container">
+        <div
+          ref="refLogContainer"
+          class="log-container"
+          :style="{
+            height: hideLog ? '0' : 'calc(100vh - 615px)',
+          }"
+        >
           <div
             v-for="(item, index) in logMessages"
             :key="item.id"
@@ -140,10 +152,10 @@
             }"
             class="log-item"
           >
-            <label>
+            <label class="log-label">
               {{ index + 1 }}
             </label>
-            <div>
+            <div class="log-item-content">
               {{ item.message }}
             </div>
           </div>
@@ -229,6 +241,8 @@ const isGenerating = ref(false);
 const generatingPercent = ref("");
 const generateResultInfo = ref("");
 const refLogContainer = ref();
+
+const hideLog = ref(false);
 
 const checkIsInit = async () => {
   console.log("checkIsInit...");
@@ -341,10 +355,14 @@ const updateGenerateResultInfo = (state: any) => {
   let success = 0;
   let partialSuccess = 0;
   let failed = 0;
+
   let writeFileCount = 0;
+  let totalFileCount = 0;
   for (let i = 0; i < state.tasks.length; i++) {
     const task = state.tasks[i];
     writeFileCount += task.writeFileCount;
+    totalFileCount += task.total;
+
     if (task.success === 0 && task.failed === 0) {
       continue;
     }
@@ -358,7 +376,7 @@ const updateGenerateResultInfo = (state: any) => {
     }
   }
 
-  generateResultInfo.value = `总数:${total} | 成功数:${success} | 部分成功数:${partialSuccess} | 失败数:${failed}；输出文件总数:${writeFileCount} `;
+  generateResultInfo.value = `总数:${total} | 成功数:${success} | 部分成功数:${partialSuccess} | 失败数:${failed}；输出文件总数:${writeFileCount}/${totalFileCount} `;
 };
 
 const selectSaveDir = async () => {
@@ -460,7 +478,7 @@ const getLogColor = (item: any) => {
   } else if (item.type === "success") {
     return "green";
   } else if (item.type === "info") {
-    return "darkseagreen";
+    return "#498ba7";
   }
 };
 
@@ -488,7 +506,6 @@ const addCustomerItem = () => {
 }
 
 .log-container {
-  height: calc(100vh - 615px);
   width: 100%;
   overflow: auto;
 
@@ -497,10 +514,16 @@ const addCustomerItem = () => {
     display: flex;
     vertical-align: top;
 
-    > label {
+    .log-label {
       width: 3em;
+      min-width: 3em;
       text-align: right;
       color: gainsboro;
+      user-select: none;
+    }
+
+    .log-item-content {
+      flex: 1;
     }
   }
 }

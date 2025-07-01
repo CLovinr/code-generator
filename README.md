@@ -2,6 +2,9 @@
 
 Visual Studio Code 代码生成器插件（地址：[code generator dusk](https://marketplace.visualstudio.com/items?itemName=clovinr.code-generator-dusk)）。
 
+- github：[https://github.com/CLovinr/code-generator](https://github.com/CLovinr/code-generator)
+- gitee：[https://gitee.com/CLovinr/code-generator](https://gitee.com/CLovinr/code-generator
+
 ## 1、安装要求
 
 - Visual Studio Code v1.90.0+
@@ -45,7 +48,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
    2. 脚本文件名不要与系统内置成员重名
    3. 全局对象为`global`，类似浏览器的`window`
    4. 使用`module.exports`导出内部成员
-      ```js
+      ```JavaScript
       module.export = {
           ...
       }
@@ -54,19 +57,22 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ### 模板说明
 
 1. 全局设置板块
-   ```js
+   ```JavaScript
    <%@
        //设置输出文件
        out="java/${basePackagePath}/dto/${subName}/${moduleName}DTO.java"
    %>
    ```
-   1. `out`：设置文件输出路径字符串，支持`${varName}`格式的变量。
-   2. `write`：设置是否输出文件，若最终值为`"no"`、`"false"`、`false`、`"0"`、`0`时，则不会输出文件
-   3. `execute` 设置是否执行 js 脚本，若最终值为`"no"`、`"false"`、`false`、`"0"`、`0`时，则不会执行
-   4. `include`：引入子模板（`*.jsin`），优先在所选模板目录的 `includes` 下查找，若未找到、则在 `common/includes` 目录下查找
-   5. 忽略后面的第一个行
+   1. 格式：
+      `${expression}`：变量引用（不支持表达式），支持多级，如：`${formState.var1}`，`${ formState.var1 && formState.var1 }`
+   2. 支持的设置类型：
+      1. `out`：设置文件输出路径字符串，支持`${varName}`格式的变量。
+      2. `write`：设置是否输出文件，若最终值为`"no"`、`"false"`、`false`、`"0"`、`0`时，则不会输出文件
+      3. `execute` 设置是否执行 js 脚本，若最终值为`"no"`、`"false"`、`false`、`"0"`、`0`时，则不会执行
+      4. `include`：引入子模板（`*.jsin`），优先在所选模板目录的 `includes` 下查找，若未找到、则在 `common/includes` 目录下查找
+      5. 忽略后面的第一个行
 2. 局部脚本区域
-   ```js
+   ```JavaScript
    <%
        let varName = "World"
    %>
@@ -75,7 +81,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
    1. 在当前模板下声明的变量，仅在当前模板下有效
    2. 忽略后面的第一个行
 3. 表达式输出
-   ```js
+   ```JavaScript
    <%=expression%>
    ```
    1. 直接输出表达式结果
@@ -282,6 +288,16 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ## 5、已知问题
 
 ## 6、发布说明
+
+### 1.0.3
+
+- 显示代码生成输出文件数量信息。
+- 打包发布时，自动将`README.md`文件中的图片连接改为`https://cdn.jsdelivr.net/gh/`前缀，以便中国大陆可以正常访问。
+- 完善全局设置板块，`${expression}`支持表达式，如：`out = "${formState.var1 && formState.var2}"`。
+- 添加的模块可上下移动排序。
+- 删除添加的模块时，弹出确认框。
+- 搜索可过滤添加的模块，且搜索忽略大小写。
+- 可折叠日志板块。
 
 ### 1.0.2
 

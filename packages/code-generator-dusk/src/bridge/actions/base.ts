@@ -35,6 +35,18 @@ export function registerActions(
     }
   });
 
+  onAction("confirm", async ({ message }) => {
+    const result = await vscode.window.showInformationMessage(
+      message,
+      { modal: true },
+      "确认"
+    );
+
+    if (result !== "确认") {
+      throw new Error("已取消！");
+    }
+  });
+
   onAction("getTemplateData", async (data) => {
     const configDir: string = data as string;
     const generator = new CodeGenerator(context, configDir);

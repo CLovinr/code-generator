@@ -134,34 +134,42 @@ function genScript(
             }
 
             if (attrValue) {
-              //处理属性
-              let strPast = "";
-              while (true) {
-                const rs = /\$\{\s*([a-zA-Z0-9_.$-]+)\s*\}/.exec(attrValue);
-                if (rs) {
-                  const varName = rs[1];
-                  const varValue = getDeepAttrValue(globalContextMap, varName);
-                  strPast += attrValue.substring(0, rs.index);
-                  strPast +=
-                    varValue === undefined || varValue === null ? "" : varValue;
-                  attrValue = attrValue.substring(rs.index + rs[0].length);
-                } else {
-                  strPast += attrValue;
-                  break;
+              const wholeMatch = /^\s*$\{\s*([^\{\}\r\n]+)\s*\}\s*$/.exec(
+                attrValue
+              );
+              if (wholeMatch) {
+                attrValue = getDeepAttrValue(globalContextMap, wholeMatch[1]);
+              } else {
+                //处理属性
+                let strPast = "";
+                while (true) {
+                  const rs = /\$\{\s*([^\{\}\r\n]+)\s*\}/.exec(attrValue);
+                  if (rs) {
+                    const varName = rs[1];
+                    const varValue = getDeepAttrValue(
+                      globalContextMap,
+                      varName
+                    );
+                    strPast += attrValue.substring(0, rs.index);
+                    strPast +=
+                      varValue === undefined || varValue === null
+                        ? ""
+                        : varValue;
+                    attrValue = attrValue.substring(rs.index + rs[0].length);
+                  } else {
+                    strPast += attrValue;
+                    break;
+                  }
                 }
+                attrValue = strPast;
               }
-              attrValue = strPast;
-            }
-
-            const rs = /^$\{\s*([a-zA-Z0-9_.$-]+)\s*\}$/.exec(attrValue);
-            if (rs) {
-              attrValue = getDeepAttrValue(globalContextMap, rs[1]);
             }
 
             if (attrValue === null || attrValue === undefined) {
-              console.warn("attr " + name + " is empty:file=" + currentFile);
+              console.warn(`attr "${name}" is empty: file="${currentFile}"`);
               continue;
             }
+
             switch (name) {
               case "out": //设置输出文件
                 // outPath = path.join(baseOutDir, attrValue);

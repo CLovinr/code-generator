@@ -1,6 +1,6 @@
 {
   "name": "code-generator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,10 +9,11 @@
     "watch:extension": "pnpm -F code-generator-dusk watch",
     "watch:webview": "pnpm -F webview-view watch",
     "watch": "npm-run-all -p watch:extension watch:webview",
-    "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator-dusk/ && cpx ./README.md ./packages/code-generator-dusk/ && cpx ./CHANGELOG.md ./packages/code-generator-dusk/ && cpx ./docs/**/* ./packages/code-generator-dusk/docs/",
     "clean": "rimraf ./packages/code-generator-dusk/dist",
+    "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator-dusk/ && cpx ./README.md ./packages/code-generator-dusk/ && cpx ./CHANGELOG.md ./packages/code-generator-dusk/ && cpx ./docs/**/* ./packages/code-generator-dusk/docs/",
+    "process-readme": "node ./scripts/processReadme.js",
     "package:extension": "pnpm -F code-generator-dusk vsce:package",
-    "package": "pnpm clean && pnpm copy:info-files && pnpm build:webview && pnpm package:extension"
+    "package": "pnpm clean && pnpm copy:info-files && pnpm process-readme && pnpm build:webview && pnpm package:extension"
   },
   "keywords": [
     "code generator",

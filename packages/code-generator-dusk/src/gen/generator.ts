@@ -163,7 +163,7 @@ export class CodeGenerator {
         dbKey: dbItem?.key,
         dbType: dbItem?.type,
         dbHost: dbItem?.options?.host,
-        dbPort: dbItem?.options?.port
+        dbPort: dbItem?.options?.port,
       },
     };
   }
@@ -348,7 +348,7 @@ export class CodeGenerator {
         total: tplPaths.length,
         success: 0,
         failed: 0,
-        writeFileCount: 0,
+        writeFileCount: 0
       };
       state.tasks.push(task);
     }
@@ -454,14 +454,14 @@ export class CodeGenerator {
               const outFile = result.out;
               const content = result.content;
               if (!outFile) {
-                globalContext.console.log(
+                globalContext.console.warn(
                   "no write file:",
                   outFile,
                   ", jstpl=" + file
                 );
                 noticeProgress();
               } else if (!result.write) {
-                globalContext.console.log(
+                globalContext.console.warn(
                   "not write file: ",
                   outFile,
                   ", jstpl=" + file
@@ -479,7 +479,7 @@ export class CodeGenerator {
                 fs.writeFileSync(outFile, content, {
                   encoding: outEncoding,
                 });
-                task.writeFileCount ++;
+                task.writeFileCount++;
               }
 
               task.success++;
@@ -502,9 +502,13 @@ export class CodeGenerator {
           noticeProgress();
         } finally {
           if (task.total === task.success) {
-            globalContext.console.success(`【成功】${item.name}，输出文件数：${task.writeFileCount}`);
+            globalContext.console.success(
+              `【成功】${item.name}，输出文件数：${task.writeFileCount}/${task.total}`
+            );
           } else {
-            globalContext.console.warn(`【未成功】${item.name}，输出文件数：${task.writeFileCount}`);
+            globalContext.console.warn(
+              `【未成功】${item.name}，输出文件数：${task.writeFileCount}/${task.total}`
+            );
           }
         }
 

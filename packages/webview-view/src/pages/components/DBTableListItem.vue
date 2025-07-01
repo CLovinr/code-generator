@@ -37,8 +37,8 @@
             描述
           </vscode-data-grid-cell>
         </vscode-data-grid-row>
-        <template v-for="item in customerItems" :key="item.id">
-          <vscode-data-grid-row>
+        <template v-for="(item, index) in customerItems" :key="item.id">
+          <vscode-data-grid-row v-if="isMatch(item)">
             <vscode-data-grid-cell grid-column="1">
               <VsCheckbox
                 v-model="item.checked"
@@ -50,7 +50,7 @@
                 style="
                   display: flex;
                   align-items: center;
-                  gap: 10px;
+                  gap: 3px;
                   width: 100%;
                 "
               >
@@ -62,6 +62,28 @@
                 >
                   <i slot="start" class="codicon codicon-symbol-field" />
                 </VsTextField>
+                <vscode-button
+                  appearance="icon"
+                  :disabled="globalLoading || !!searchText || index === 0"
+                  @click="moveUp(item)"
+                  title="往上移"
+                  style="padding: 0"
+                >
+                  <i class="codicon codicon-arrow-small-up"></i>
+                </vscode-button>
+                <vscode-button
+                  appearance="icon"
+                  :disabled="
+                    globalLoading ||
+                    !!searchText ||
+                    index === customerItems.length - 1
+                  "
+                  @click="moveDown(item)"
+                  title="往下移"
+                  style="padding: 0"
+                >
+                  <i class="codicon codicon-arrow-small-down"></i>
+                </vscode-button>
                 <vscode-button
                   appearance="icon"
                   :disabled="globalLoading"
@@ -216,8 +238,8 @@ const isMatch = (item: any) => {
     return true;
   } else {
     return (
-      item.name?.indexOf(searchText.value) >= 0 ||
-      item.comment?.indexOf(searchText.value) >= 0
+      item.name?.toLowerCase().indexOf(searchText.value.toLowerCase()) >= 0 ||
+      item.comment?.toLowerCase().indexOf(searchText.value.toLowerCase()) >= 0
     );
   }
 };
@@ -344,8 +366,33 @@ const addCustomerItem = () => {
   });
 };
 
-const removeCustomerItem = (item: any) => {
+const removeCustomerItem = async (item: any) => {
+  await vscodeApiStore.request("confirm", {
+    message: `是否移元素【${item.name || ""}】？`,
+  });
   customerItems.value = customerItems.value.filter((o) => o.id !== item.id);
+};
+
+const moveUp = (item: any) => {
+  const index = customerItems.value.findIndex((o) => o.id === item.id);
+  if (index > 0) {
+    const items = [...customerItems.value];
+    const temp = items[index];
+    items[index] = items[index - 1];
+    items[index - 1] = temp;
+    customerItems.value = items;
+  }
+};
+
+const moveDown = (item: any) => {
+  const index = customerItems.value.findIndex((o) => o.id === item.id);
+  if (index < customerItems.value.length - 1) {
+    const items = [...customerItems.value];
+    const temp = items[index];
+    items[index] = items[index + 1];
+    items[index + 1] = temp;
+    customerItems.value = items;
+  }
 };
 
 defineExpose({
@@ -356,7 +403,6 @@ defineExpose({
 .db-table-list {
   width: 100%;
   max-width: 1000px;
-  height: 350px;
   display: flex;
   flex-direction: column;
 }
