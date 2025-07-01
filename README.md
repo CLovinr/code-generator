@@ -289,7 +289,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 
 ## 6、发布说明
 
-### 1.0.3
+### 1.0.3（未发布）
 
 - 显示代码生成输出文件数量信息。
 - 打包发布时，自动将`README.md`文件中的图片连接改为`https://cdn.jsdelivr.net/gh/`前缀，以便中国大陆可以正常访问。
