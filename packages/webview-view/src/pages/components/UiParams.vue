@@ -210,8 +210,6 @@ defineExpose({
 <style lang="scss" scoped>
 .ui-params {
   width: 100%;
-  max-width: 1000px;
-  height: 350px;
   overflow: auto;
 
   .params-container {

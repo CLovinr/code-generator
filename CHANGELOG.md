@@ -15,6 +15,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - 删除添加的模块时，弹出确认框。
 - 搜索可过滤添加的模块，且搜索忽略大小写。
 - 可折叠日志板块。
+- 发布版去掉source map文件。
+- 实时保存部分配置信息到文件。
 
 ### 1.0.2
 

@@ -27,6 +27,6 @@ export default defineConfig({
   build: {
     outDir: "../code-generator-dusk/dist/webview-view",
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: false,
   },
 });

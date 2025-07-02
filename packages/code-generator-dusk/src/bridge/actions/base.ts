@@ -111,9 +111,6 @@ export function registerActions(
     }
 
     const configDir: string = data.configDir;
-    const tplName: string = data.tplName;
-    const baseOutDir: string = data.baseOutDir?.replace(/\\/g, "/");
-    const uiValues: any = data.uiValues;
 
     const customerItems: Array<{
       id: any;
@@ -150,15 +147,7 @@ export function registerActions(
     const generator = new CodeGenerator(context, configDir);
     try {
       currentGeneratingGen = generator;
-      const result = await generator.startGenCode(
-        {
-          tplName,
-          baseOutDir,
-          uiValues,
-          customerItems,
-        },
-        items
-      );
+      const result = await generator.startGenCode(items);
       vscode.window.showInformationMessage(`代码生成器已执行结束！`);
       return result;
     } finally {
@@ -228,5 +217,12 @@ export function registerActions(
         }
       });
     });
+  });
+
+  onAction("setCurrentConfig", async (data) => {
+    const configDir: string = data.configDir;
+    const generator = new CodeGenerator(context, configDir);
+    const currentSubConfig = data.currentSubConfig;
+    generator.setCurrentJsonItem(currentSubConfig);
   });
 }

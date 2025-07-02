@@ -358,12 +358,15 @@ const itemIdBase = `customer-${new Date().getTime()}`;
 let itemId = 0;
 const addCustomerItem = () => {
   refDataGrid.value.scrollTop = 0; // refDataGrid.value.scrollHeight;
-  customerItems.value.push({
+  const items = [...customerItems.value];
+  items.push({
     id: `${itemIdBase}:${itemId++}`,
     checked: false,
     name: "",
     comment: "",
   });
+
+  customerItems.value = items;
 };
 
 const removeCustomerItem = async (item: any) => {
@@ -402,7 +405,6 @@ defineExpose({
 <style lang="scss" scoped>
 .db-table-list {
   width: 100%;
-  max-width: 1000px;
   display: flex;
   flex-direction: column;
 }

@@ -11,6 +11,14 @@ import { loadTables, listTableInfo } from "./db";
 import TplScript from "../core/TplScript";
 import { RequestHandler } from "../bridge/RequestHandler";
 
+const currentCacheConfig: {
+  [key: string]: {
+    config?: string;
+    savePath?: string;
+    timer: any;
+  };
+} = {};
+
 export class CodeGenerator {
   private context: vscode.ExtensionContext;
   private configDir: string;
@@ -50,8 +58,8 @@ export class CodeGenerator {
   }
 
   private getCurrentDBItem() {
-    const currentKey = this.config.databases.current;
-    const dbConfigItem = this.config.databases.items?.[currentKey];
+    const currentKey = this.config.databases?.current;
+    const dbConfigItem = this.config.databases?.items?.[currentKey];
 
     if (!dbConfigItem || dbConfigItem.enable === false) {
       // vscode.window.showErrorMessage(`无法获取数据库连接配置：${currentKey}`);
@@ -73,11 +81,17 @@ export class CodeGenerator {
   public getCurrentJsonConfig(encoding: BufferEncoding = "utf-8") {
     let currentJson = {};
     try {
-      const currentJsonPath = this.currentJsonFile;
-      if (fs.existsSync(currentJsonPath)) {
-        const content = fs.readFileSync(currentJsonPath, encoding);
-        const jsonConfig = JSON.parse(content);
-        currentJson = jsonConfig || {};
+      if (currentCacheConfig[this.currentJsonFile]?.config) {
+        currentJson = JSON.parse(
+          currentCacheConfig[this.currentJsonFile].config!
+        );
+      } else {
+        const currentJsonPath = this.currentJsonFile;
+        if (fs.existsSync(currentJsonPath)) {
+          const content = fs.readFileSync(currentJsonPath, encoding);
+          const jsonConfig = JSON.parse(content);
+          currentJson = jsonConfig || {};
+        }
       }
     } catch (e) {
       console.error("load current json error: ", e);
@@ -88,30 +102,67 @@ export class CodeGenerator {
 
   public setCurrentJsonItem(
     subConfig: any,
-    encoding: BufferEncoding = "utf-8",
-    overwrite: boolean = false
+    encoding: BufferEncoding | undefined = undefined,
+    overwrite: boolean = true
   ) {
     let jsonConfig: any = this.getCurrentJsonConfig();
+    let change = false;
     if (!overwrite) {
-      jsonConfig = _.merge(jsonConfig, subConfig);
+      if (!_.isEqual(jsonConfig, subConfig)) {
+        change = true;
+        jsonConfig = _.merge(jsonConfig, subConfig);
+      }
     } else {
       for (const key in subConfig) {
-        jsonConfig[key] = subConfig[key];
+        if (!_.isEqual(jsonConfig[key], subConfig[key])) {
+          change = true;
+          jsonConfig[key] = subConfig[key];
+        }
       }
     }
-    this.saveCurrentJsonConfig(jsonConfig, encoding);
+
+    if (change) {
+      if (!encoding) {
+        encoding = this.config.encoding || "utf-8";
+      }
+
+      this.saveCurrentJsonConfig(jsonConfig, encoding);
+    }
   }
 
-  public saveCurrentJsonConfig(
+  private saveCurrentJsonConfig(
     currentJson: any,
     encoding: BufferEncoding = "utf-8"
   ) {
     try {
       const content = JSON.stringify(currentJson || {}, undefined, 2);
+
       const currentJsonPath = this.currentJsonFile;
-      fs.writeFileSync(currentJsonPath, content, {
-        encoding: encoding,
-      });
+
+      if (!currentCacheConfig[currentJsonPath]) {
+        currentCacheConfig[currentJsonPath] = {
+          timer: null,
+        };
+      }
+
+      currentCacheConfig[currentJsonPath].config = content;
+      if (!currentCacheConfig[currentJsonPath].timer) {
+        currentCacheConfig[currentJsonPath].timer = setTimeout(() => {
+          try {
+            fs.writeFileSync(
+              currentJsonPath,
+              currentCacheConfig[currentJsonPath].config || "{}",
+              {
+                encoding: encoding,
+              }
+            );
+          } catch (e) {
+            console.error("save current json error: ", e);
+          } finally {
+            delete currentCacheConfig[currentJsonPath];
+          }
+        }, 300);
+      }
     } catch (e) {
       console.error("save current json error: ", e);
     }
@@ -146,6 +197,7 @@ export class CodeGenerator {
     const uiParams = this.config.ui?.params || [];
     const uiValues = this.config.ui.values || {};
     const customerItems = this.config.customerItems || [];
+    const hideLog = this.config.hideLog || false;
 
     const dbItem = this.getCurrentDBItem();
 
@@ -159,6 +211,7 @@ export class CodeGenerator {
       uiParams,
       uiValues,
       customerItems,
+      hideLog,
       info: {
         dbKey: dbItem?.key,
         dbType: dbItem?.type,
@@ -201,12 +254,6 @@ export class CodeGenerator {
   }
 
   public async startGenCode(
-    options: {
-      tplName?: string;
-      baseOutDir?: string;
-      uiValues?: any;
-      customerItems?: any;
-    },
     items: Array<{
       id: any;
       name: string;
@@ -216,19 +263,13 @@ export class CodeGenerator {
   ) {
     try {
       this._generating = true;
-      return await this.doStartGenCode(options, items);
+      return await this.doStartGenCode(items);
     } finally {
       this._generating = false;
     }
   }
 
   private async doStartGenCode(
-    options: {
-      tplName?: string;
-      baseOutDir?: string;
-      uiValues?: any;
-      customerItems?: any;
-    },
     items: Array<{
       id: any;
       name: string;
@@ -238,14 +279,16 @@ export class CodeGenerator {
   ) {
     const config = _.cloneDeep(this.config);
 
-    const baseOutDir =
-      options.baseOutDir || config.baseOutDir || "../target/genCODE";
+    const baseOutDir = (config.baseOutDir || "../target/genCODE").replace(
+      /\\/g,
+      "/"
+    );
 
     const absBaseOutDir = TplScript.getPath(this.configDir, baseOutDir);
 
-    const finalTplName = options.tplName || config.tplName;
+    const finalTplName = config.tplName;
     const uiValuesVar = this.config.ui?.attr || "formState";
-    const finalUiValues = options.uiValues || {};
+    const finalUiValues = config.ui.values || {};
 
     const encoding = config.encoding || "utf-8";
     const outEncoding = config.outEncoding || encoding;
@@ -268,19 +311,6 @@ export class CodeGenerator {
     }
 
     const onStart = config.onStart?.trim();
-
-    this.setCurrentJsonItem(
-      {
-        tplName: finalTplName,
-        baseOutDir,
-        ui: {
-          values: finalUiValues,
-        },
-        customerItems: options.customerItems,
-      },
-      encoding,
-      true
-    );
 
     const processLogData: any[] = [];
     let logId = 0;
@@ -348,7 +378,7 @@ export class CodeGenerator {
         total: tplPaths.length,
         success: 0,
         failed: 0,
-        writeFileCount: 0
+        writeFileCount: 0,
       };
       state.tasks.push(task);
     }

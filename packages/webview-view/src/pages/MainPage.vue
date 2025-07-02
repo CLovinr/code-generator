@@ -87,9 +87,7 @@
             :configDir="codeGenConfigDir"
             :infoData="infoData"
             @onLoadTable="loadTemplates"
-            :style="{
-              height: hideLog ? 'calc(100vh - 615px + 350px)' : '350px',
-            }"
+            :style="contentStyle"
           />
         </vscode-panel-view>
         <vscode-panel-view id="uiParams" style="padding: 5px 0 0 0">
@@ -99,13 +97,14 @@
             :uiProps="uiProps"
             :uiParams="uiParams"
             v-model="uiValues"
+            :style="contentStyle"
           />
         </vscode-panel-view>
       </vscode-panels>
 
       <VsDivider />
       <div class="form-item left no-margin">
-        <div style="display: flex; align-items: center; gap: 5px;width: 100%;">
+        <div style="display: flex; align-items: center; gap: 5px; width: 100%">
           <VsButton
             :disabled="globalLoading || isGenerating"
             @click="addCustomerItem"
@@ -128,7 +127,7 @@
           >
             清除
           </VsButton>
-          <div style="flex: 1; display: flex; justify-content: right">
+          <div style="padding-left: 15px">
             <VsCheckbox v-model="hideLog">折叠</VsCheckbox>
           </div>
         </div>
@@ -162,7 +161,7 @@
         </div>
       </div>
       <VsDivider />
-      <div class="form-item right">
+      <div class="form-item right" style="margin-bottom: 0">
         <div>
           {{ generateResultInfo }}
         </div>
@@ -244,6 +243,13 @@ const refLogContainer = ref();
 
 const hideLog = ref(false);
 
+const contentStyle = computed(() => {
+  return {
+    maxWidth: "1100px",
+    height: hideLog.value ? "calc(100vh - 615px + 370px)" : "370px",
+  };
+});
+
 const checkIsInit = async () => {
   console.log("checkIsInit...");
   try {
@@ -291,6 +297,7 @@ const loadTemplates = async () => {
       tplName.value = allTemplates.value?.[0];
     }
 
+    hideLog.value = result.hideLog || false;
     uiProps.value = result.uiProps || {};
     uiParams.value = result.uiParams || [];
     uiValues.value = result.uiValues || {};
@@ -421,9 +428,6 @@ const startGenCode = async () => {
       configDir: codeGenConfigDir.value,
       tables: [...tableNames.value],
       customerItems: theCustomerItems,
-      tplName: tplName.value,
-      baseOutDir: baseOutDir.value,
-      uiValues: _.cloneDeep(uiValues.value),
     });
 
     if (!result) {
@@ -491,13 +495,85 @@ watch(logMessages, () => {
 const addCustomerItem = () => {
   refTableListItem.value.addCustomerItem();
 };
+
+////////////////////////
+// 监听属性变化后，保存到配置文件
+
+watch(
+  customerItems,
+  (val) => {
+    if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+      vscodeApiStore.request("setCurrentConfig", {
+        configDir: codeGenConfigDir.value,
+        currentSubConfig: {
+          customerItems: _.cloneDeep(val),
+        },
+      });
+    }
+  },
+  {
+    deep: true,
+  }
+);
+
+watch(tplName, (val) => {
+  if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+    vscodeApiStore.request("setCurrentConfig", {
+      configDir: codeGenConfigDir.value,
+      currentSubConfig: {
+        tplName: val,
+      },
+    });
+  }
+});
+
+watch(baseOutDir, (val) => {
+  if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+    vscodeApiStore.request("setCurrentConfig", {
+      configDir: codeGenConfigDir.value,
+      currentSubConfig: {
+        baseOutDir: val,
+      },
+    });
+  }
+});
+
+watch(
+  uiValues,
+  (val) => {
+    if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+      vscodeApiStore.request("setCurrentConfig", {
+        configDir: codeGenConfigDir.value,
+        currentSubConfig: {
+          ui: {
+            values: _.cloneDeep(val || {}),
+          },
+        },
+      });
+    }
+  },
+  {
+    deep: true,
+  }
+);
+
+watch(hideLog, (val) => {
+  if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+    vscodeApiStore.request("setCurrentConfig", {
+      configDir: codeGenConfigDir.value,
+      currentSubConfig: {
+        hideLog: val,
+      },
+    });
+  }
+});
 </script>
 
 <style scoped lang="scss">
 .container {
   padding: 5px 10px;
   width: 100%;
-  min-width: 450px;
+  min-width: 600px;
 }
 .vs-text-area {
   width: 100%;
@@ -510,7 +586,7 @@ const addCustomerItem = () => {
   overflow: auto;
 
   .log-item {
-    min-width: 500px;
+    min-width: 600px;
     display: flex;
     vertical-align: top;
 
