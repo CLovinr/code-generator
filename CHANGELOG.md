@@ -9,7 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### 1.0.3
 
 - 显示代码生成输出文件数量信息。
-- 打包发布时，自动将`README.md`文件中的图片连接改为`https://cdn.jsdelivr.net/gh/`前缀，以便中国大陆可以正常访问。
+- 打包发布时，自动将`README.md`文件中的图片链接改为`https://cdn.jsdelivr.net/gh/`前缀，以便中国大陆可以正常访问。
 - 完善全局设置板块，`${expression}`支持表达式，如：`out = "${formState.var1 && formState.var2}"`。
 - 添加的模块可上下移动排序。
 - 删除添加的模块时，弹出确认框。
