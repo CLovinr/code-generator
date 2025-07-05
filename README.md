@@ -64,7 +64,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
    %>
    ```
    1. 格式：
-      `${expression}`：变量引用（不支持表达式），支持多级，如：`${formState.var1}`，`${ formState.var1 && formState.var1 }`
+      `${expression}`：变量引用（支持表达式），如：`${formState.var1}`，`${ formState.var1 && formState.var1 }`
    2. 支持的设置类型：
       1. `out`：设置文件输出路径字符串，支持`${varName}`格式的变量。
       2. `write`：设置是否输出文件，若最终值为`"no"`、`"false"`、`false`、`"0"`、`0`时，则不会输出文件
