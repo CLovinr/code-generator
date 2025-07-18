@@ -98,6 +98,7 @@
             :uiParams="uiParams"
             v-model="uiValues"
             :style="contentStyle"
+            @resetValues="onResetValues"
           />
         </vscode-panel-view>
       </vscode-panels>
@@ -275,6 +276,11 @@ const checkIsInit = async () => {
   }
 };
 
+const onResetValues = async () => {
+  await vscodeApiStore.request("resetValues", codeGenConfigDir.value);
+  uiValues.value = {};
+};
+
 const loadTemplates = async () => {
   try {
     const result: any = await vscodeApiStore.request(
@@ -300,9 +306,13 @@ const loadTemplates = async () => {
     hideLog.value = result.hideLog || false;
     uiProps.value = result.uiProps || {};
     uiParams.value = result.uiParams || [];
-    uiValues.value = result.uiValues || {};
     customerItems.value = result.customerItems || [];
+
     infoData.value = result.info || {};
+
+    const extraData = result.extraData || {};
+    tableNames.value = extraData.checkedTables || tableNames.value || [];
+    uiValues.value = extraData.uiValues || {};
   } catch (err) {
     console.error(err);
   }
@@ -500,6 +510,40 @@ const addCustomerItem = () => {
 // 监听属性变化后，保存到配置文件
 
 watch(
+  tableNames,
+  (val) => {
+    if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+      vscodeApiStore.request("setCurrentConfig", {
+        configDir: codeGenConfigDir.value,
+        currentExtraConfig: {
+          checkedTables: _.cloneDeep(val),
+        },
+      });
+    }
+  },
+  {
+    deep: true,
+  }
+);
+
+watch(
+  uiValues,
+  (val) => {
+    if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
+      vscodeApiStore.request("setCurrentConfig", {
+        configDir: codeGenConfigDir.value,
+        currentExtraConfig: {
+          uiValues: _.cloneDeep(val || {}),
+        },
+      });
+    }
+  },
+  {
+    deep: true,
+  }
+);
+
+watch(
   customerItems,
   (val) => {
     if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
@@ -537,25 +581,6 @@ watch(baseOutDir, (val) => {
     });
   }
 });
-
-watch(
-  uiValues,
-  (val) => {
-    if (isInitCodeGenConfig.value && codeGenConfigDir.value) {
-      vscodeApiStore.request("setCurrentConfig", {
-        configDir: codeGenConfigDir.value,
-        currentSubConfig: {
-          ui: {
-            values: _.cloneDeep(val || {}),
-          },
-        },
-      });
-    }
-  },
-  {
-    deep: true,
-  }
-);
 
 watch(hideLog, (val) => {
   if (isInitCodeGenConfig.value && codeGenConfigDir.value) {

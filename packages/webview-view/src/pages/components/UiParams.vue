@@ -1,69 +1,110 @@
 <template>
   <div class="ui-params">
     <div class="params-container">
-      <template v-for="(item, index) in enabledUIParams" :key="item.var">
-        <VsDivider v-if="index > 0" style="width: 50%" />
-        <div class="form-item" :title="item.title">
-          <label
-            :class="{
-              [`w${uiProps.labelWidth || 6}`]: true,
-              'no-label': item.label === '' || _.isNil(item.label),
-            }"
-            >{{ item.label }}</label
+      <div class="form-item">
+        <label class="no-label"></label>
+        <div class="field">
+          <VsButton
+            :disabled="globalLoading"
+            appearance="secondary"
+            @click="emit('resetValues')"
           >
-          <div class="field">
-            <template v-if="item.type === 'checkbox'">
-              <VsCheckbox
-                v-for="o in item.options"
-                v-model="uiValues[item.var][o.value]"
-                :value="o.value"
-                :key="o.value"
-                :disabled="globalLoading"
-                :title="o.title"
-                >{{ o.text }}</VsCheckbox
-              >
-            </template>
-            <template v-else-if="item.type === 'dropdown'">
-              <VsDropdown
-                v-model="uiValues[item.var]"
-                :title="item.title"
-                :disabled="globalLoading"
-              >
-                <VsOption
+            重置参数
+          </VsButton>
+        </div>
+      </div>
+      <template v-if="isReady">
+        <template v-for="(item, index) in enabledUIParams" :key="item.var">
+          <VsDivider v-if="index > 0" style="width: 50%" />
+          <div class="form-item" :title="item.title">
+            <label
+              :class="{
+                [`w${uiProps.labelWidth || 6}`]: true,
+                'no-label': item.label === '' || _.isNil(item.label),
+              }"
+              >{{ item.label }}
+            </label>
+            <div class="field">
+              <template v-if="item.type === 'checkbox'">
+                <VsCheckbox
+                  v-model="allCheckboxes[item.var]"
+                  :disabled="globalLoading"
+                  :title="allCheckboxes[item.var] ? '全取消' : '全选'"
+                  @click="
+                    () => {
+                      checkboxesStates.clicked = true;
+                      nextTick(() => {
+                        checkCheckboxes(item.var);
+                      });
+                    }
+                  "
+                  @change="
+                    () => {
+                      checkboxesStates.changed = true;
+                      nextTick(() => {
+                        checkCheckboxes(item.var);
+                      });
+                      sleep(500).then(() => {
+                        checkboxesStates.clicked = false;
+                        checkboxesStates.changed = false;
+                      });
+                    }
+                  "
+                />
+                <VsCheckbox
                   v-for="o in item.options"
+                  v-model="uiValues[item.var][o.value]"
                   :value="o.value"
                   :key="o.value"
                   :disabled="globalLoading"
                   :title="o.title"
                 >
                   {{ o.text }}
-                </VsOption>
-              </VsDropdown>
-            </template>
-            <template v-else-if="item.type === 'textfield'">
-              <VsTextField
-                v-model="uiValues[item.var]"
-                :disabled="globalLoading"
-                :maxlength="item.maxlength"
-              />
-            </template>
-            <template v-else-if="item.type === 'textarea'">
-              <VsTextArea
-                v-model="uiValues[item.var]"
-                :disabled="globalLoading"
-                :maxlength="item.maxlength"
-              />
-            </template>
+                </VsCheckbox>
+              </template>
+              <template v-else-if="item.type === 'dropdown'">
+                <VsDropdown
+                  v-model="uiValues[item.var]"
+                  :title="item.title"
+                  :disabled="globalLoading"
+                >
+                  <VsOption
+                    v-for="o in item.options"
+                    :value="o.value"
+                    :key="o.value"
+                    :disabled="globalLoading"
+                    :title="o.title"
+                  >
+                    {{ o.text }}
+                  </VsOption>
+                </VsDropdown>
+              </template>
+              <template v-else-if="item.type === 'textfield'">
+                <VsTextField
+                  v-model="uiValues[item.var]"
+                  :disabled="globalLoading"
+                  :maxlength="item.maxlength"
+                />
+              </template>
+              <template v-else-if="item.type === 'textarea'">
+                <VsTextArea
+                  v-model="uiValues[item.var]"
+                  :disabled="globalLoading"
+                  :maxlength="item.maxlength"
+                />
+              </template>
+            </div>
           </div>
-        </div>
+        </template>
       </template>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import _ from "lodash";
+import { sleep } from "@/utils/base";
 
 import {
   VsTextField,
@@ -94,8 +135,14 @@ const vscodeApiStore = useVsCodeApiStore();
 
 const { globalLoading } = storeToRefs(vscodeApiStore);
 
+const emit = defineEmits(["resetValues"]);
+
 const modelValue = defineModel<any>("modelValue");
 const uiValues = ref<any>({});
+const allCheckboxes = ref<any>({});
+const isReady = computed(() => {
+  return Object.keys(uiValues.value).length > 0;
+});
 
 const enabledUIParams = computed(() => {
   const params: any = [];
@@ -117,9 +164,14 @@ const enabledUIParams = computed(() => {
 
 const updateUiValues = () => {
   const values = modelValue.value ? _.cloneDeep(modelValue.value) : {};
+  const _allCheckboxes: any = {};
+
   for (const p of enabledUIParams.value) {
     // 简单判断已存储的值类型不符合时，删除值
-    if (p.type === "checkbox" && typeof values[p.var] !== "object") {
+    if (
+      p.type === "checkbox" &&
+      (typeof values[p.var] !== "object" || values[p.var] instanceof Array)
+    ) {
       delete values[p.var];
     } else if (p.type !== "checkbox" && typeof values[p.var] === "object") {
       delete values[p.var];
@@ -143,8 +195,20 @@ const updateUiValues = () => {
         values[p.var] = (p.default || "").trim();
       }
     }
+
+    if (p.type === "checkbox") {
+      _allCheckboxes[p.var] = false;
+      if (
+        p.options?.length &&
+        values[p.var] &&
+        !Object.values(values[p.var]).includes(false)
+      ) {
+        _allCheckboxes[p.var] = true;
+      }
+    }
   }
 
+  allCheckboxes.value = _allCheckboxes;
   uiValues.value = values;
 };
 
@@ -177,6 +241,43 @@ watch(
     deep: true,
   }
 );
+
+const checkboxesStates = ref({
+  clicked: false,
+  changed: false,
+});
+const couldCheckCheckboxes = computed(() => {
+  return checkboxesStates.value.clicked && checkboxesStates.value.changed;
+});
+
+const checkCheckboxes = (key: string) => {
+  if (!couldCheckCheckboxes.value) {
+    return;
+  } else {
+    checkboxesStates.value.clicked = false;
+    checkboxesStates.value.changed = false;
+  }
+
+  const values = _.cloneDeep(uiValues.value);
+
+  //for (const key in allCheckboxes.value) {
+  const checked = allCheckboxes.value[key];
+
+  if (values[key]) {
+    const boxValues = Object.values(values[key]);
+    const expectedValues = Array(boxValues.length).fill(checked);
+    if (!_.isEqual(boxValues, expectedValues)) {
+      for (const k in values[key]) {
+        values[key][k] = checked;
+      }
+    }
+  }
+  //}
+
+  if (!_.isEqual(values, modelValue.value)) {
+    modelValue.value = values;
+  }
+};
 
 const checkItems = async () => {
   for (const item of enabledUIParams.value) {

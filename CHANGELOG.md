@@ -6,6 +6,15 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 发布说明
 
+### 1.0.4
+
+- 全选操作对自定义添加项有效。
+- 固定数据表表头。
+- 添加自定义数据项后，滚动到对应位置。
+- 支持定位当前勾选项，定位下一个勾选项。
+- 参数配置表单加入`重置参数`功能。
+- 参数配置表单复选框支持`全选`操作。
+
 ### 1.0.3
 
 - 显示代码生成输出文件数量信息。
@@ -15,7 +24,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - 删除添加的模块时，弹出确认框。
 - 搜索可过滤添加的模块，且搜索忽略大小写。
 - 可折叠日志板块。
-- 发布版去掉source map文件。
+- 发布版去掉 source map 文件。
 - 实时保存部分配置信息到文件。
 
 ### 1.0.2

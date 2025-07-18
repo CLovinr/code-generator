@@ -130,6 +130,40 @@ export class CodeGenerator {
     }
   }
 
+  public setCurrentExtraJsonItem(
+    extraConfig: any,
+    encoding: BufferEncoding | undefined = undefined,
+    overwrite: boolean = true
+  ) {
+    let jsonConfig: any = this.getCurrentJsonConfig();
+    let change = false;
+    if (!overwrite) {
+      if (!_.isEqual(jsonConfig.extraData, extraConfig)) {
+        change = true;
+        jsonConfig.extraData = _.merge(jsonConfig.extraData || {}, extraConfig);
+      }
+    } else {
+      if (!jsonConfig.extraData) {
+        jsonConfig.extraData = {};
+      }
+
+      for (const key in extraConfig) {
+        if (!_.isEqual(jsonConfig.extraData[key], extraConfig[key])) {
+          change = true;
+          jsonConfig.extraData[key] = extraConfig[key];
+        }
+      }
+    }
+
+    if (change) {
+      if (!encoding) {
+        encoding = this.config.encoding || "utf-8";
+      }
+
+      this.saveCurrentJsonConfig(jsonConfig, encoding);
+    }
+  }
+
   private saveCurrentJsonConfig(
     currentJson: any,
     encoding: BufferEncoding = "utf-8"
@@ -195,7 +229,7 @@ export class CodeGenerator {
 
     const labelWidth = this.config.ui?.labelWidth || 6;
     const uiParams = this.config.ui?.params || [];
-    const uiValues = this.config.ui.values || {};
+    const extraData = this.config.extraData || {};
     const customerItems = this.config.customerItems || [];
     const hideLog = this.config.hideLog || false;
 
@@ -209,7 +243,7 @@ export class CodeGenerator {
         labelWidth,
       },
       uiParams,
-      uiValues,
+      extraData,
       customerItems,
       hideLog,
       info: {

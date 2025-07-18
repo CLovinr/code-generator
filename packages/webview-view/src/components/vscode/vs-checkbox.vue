@@ -34,6 +34,7 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["change"]);
 const modelValue = defineModel<boolean | undefined>("modelValue");
 const checked = ref(modelValue.value);
 
@@ -45,6 +46,7 @@ watch(modelValue, (val: any) => {
 
 const onChange = (e: any) => {
   modelValue.value = e.target.checked;
+  emit("change", e.target.checked);
 };
 </script>
 

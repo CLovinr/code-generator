@@ -85,6 +85,23 @@ export function registerActions(
     }
   });
 
+  onAction("resetValues", async (data: any) => {
+    const result = await vscode.window.showInformationMessage(
+      "是否重置所有参数？",
+      { modal: true },
+      "确认"
+    );
+
+    if (result !== "确认") {
+      throw new Error("已取消！");
+    }
+    const configDir: string = data as string;
+    const generator = new CodeGenerator(context, configDir);
+    generator.setCurrentExtraJsonItem({
+      uiValues: {},
+    });
+  });
+
   onAction("loadDBTables", async (data: any) => {
     const configDir: string = data as string;
     const generator = new CodeGenerator(context, configDir);
@@ -223,6 +240,13 @@ export function registerActions(
     const configDir: string = data.configDir;
     const generator = new CodeGenerator(context, configDir);
     const currentSubConfig = data.currentSubConfig;
-    generator.setCurrentJsonItem(currentSubConfig);
+    const currentExtraConfig = data.currentExtraConfig;
+    if (currentSubConfig) {
+      generator.setCurrentJsonItem(currentSubConfig);
+    }
+
+    if (currentExtraConfig) {
+      generator.setCurrentExtraJsonItem(currentExtraConfig);
+    }
   });
 }
