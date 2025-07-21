@@ -6,6 +6,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 发布说明
 
+### 1.0.5
+
+- 修复参数为空的问题
+
 ### 1.0.4
 
 - 全选操作对自定义添加项有效。

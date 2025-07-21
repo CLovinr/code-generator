@@ -289,6 +289,9 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 
 ## 6、发布说明
 
+### 1.0.5
+- 修复参数为空的问题
+
 ### 1.0.4
 
 - 全选操作对自定义添加项有效。

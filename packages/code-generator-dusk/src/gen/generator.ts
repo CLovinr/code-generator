@@ -322,7 +322,7 @@ export class CodeGenerator {
 
     const finalTplName = config.tplName;
     const uiValuesVar = this.config.ui?.attr || "formState";
-    const finalUiValues = config.ui.values || {};
+    const finalUiValues = config.extraData.uiValues || {};
 
     const encoding = config.encoding || "utf-8";
     const outEncoding = config.outEncoding || encoding;
