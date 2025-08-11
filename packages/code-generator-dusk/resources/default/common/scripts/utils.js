@@ -98,7 +98,7 @@ function getJavaColumnFieldImports() {
   const imports = [];
   for (const column of tableInfo.columns) {
     const type = getJavaMapperType(column.type);
-    if (!type.startsWith("java.lang")) {
+    if (!type.startsWith("java.lang") && !imports.includes(`import ${type};`)) {
       imports.push(`import ${type};`);
     }
   }
