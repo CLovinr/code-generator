@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/CLovinr/code-generator.git"
   },
-  "version": "1.0.5",
+  "version": "1.0.6",
   "engines": {
     "vscode": "^1.90.0"
   },

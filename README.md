@@ -266,6 +266,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ```
 
 - `ui.attr`：全局引用的变量，如：formState
+- `ui.labelWidth`：设置label文字宽度，取值：`1~30`
 - `ui.params[]`：声明输入组件
   - `var`：变量名
   - `label`：输入项标签
@@ -288,6 +289,10 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ## 5、已知问题
 
 ## 6、发布说明
+
+### 1.0.6（未发布）
+- 修复模板utils.js重复导入java import的问题；
+- 完善`ui.labelWidth`，取值`1~30`；
 
 ### 1.0.5
 - 修复参数为空的问题

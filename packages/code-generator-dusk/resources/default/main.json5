@@ -9,7 +9,7 @@
   ",
   ui: {
     attr: "formState",
-    labelWidth: 6, // 1~15
+    labelWidth: 6, // 1~30
     params: [
       {
         var: "basePackageName",
