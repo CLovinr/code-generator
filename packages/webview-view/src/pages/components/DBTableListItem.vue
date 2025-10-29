@@ -1,13 +1,16 @@
 <template>
   <div class="db-table-list">
     <div class="top-tool">
+      <div style="padding-left: 5px; min-width: 90px">
+        <VsCheckbox v-model="showOnlyChecked">已勾选</VsCheckbox>
+      </div>
       <VsTextField
         v-model="searchText"
         maxlength="128"
         placeholder="搜索"
         style="width: 260px"
       />
-      <div v-if="!existsDBTables">无数据表</div>
+      <div v-if="!existsDBTables" style="min-width: 55px">无数据表</div>
       <vscode-button
         appearance="icon"
         :disabled="globalLoading"
@@ -38,7 +41,7 @@
         <vscode-data-grid-cell grid-column="1">
           <VsCheckbox
             v-model="allChecked"
-            :disabled="!!searchText || globalLoading"
+            :disabled="!!searchText || globalLoading || showOnlyChecked"
           />
         </vscode-data-grid-cell>
         <vscode-data-grid-cell grid-column="2">
@@ -178,6 +181,7 @@ const props = defineProps({
 const vscodeApiStore = useVsCodeApiStore();
 const { globalLoading } = storeToRefs(vscodeApiStore);
 
+const showOnlyChecked = ref(false);
 const searchText = ref("");
 const tableData = ref<any[]>([]);
 const existsDBTables = ref(false);
@@ -286,6 +290,17 @@ watch(
 );
 
 const isMatch = (item: any) => {
+  if (showOnlyChecked.value) {
+    if (
+      !(
+        (item.id && item.checked) ||
+        (!item.id && allTableNamesToChecked.value[item.name])
+      )
+    ) {
+      return false;
+    }
+  }
+
   if (searchText.value === "" || _.isNil(searchText.value)) {
     return true;
   } else {

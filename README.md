@@ -224,6 +224,13 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
         label: "参数1",
         type: "checkbox",
         forTemplates: ["MybatisPlus"],
+        forVars: [
+          {
+            var: "entityType",
+            op: "==",
+            value: "1",
+          },
+        ],
         default: {},
         required: false,
         options: [
@@ -266,7 +273,7 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ```
 
 - `ui.attr`：全局引用的变量，如：formState
-- `ui.labelWidth`：设置label文字宽度，取值：`1~30`
+- `ui.labelWidth`：设置 label 文字宽度，取值：`1~30`
 - `ui.params[]`：声明输入组件
   - `var`：变量名
   - `label`：输入项标签
@@ -282,6 +289,18 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
     - 多行输入（`textarea`）：变量为输入值
       - `maxlength`：最大输入字符数
   - `forTemplates` 可设置对哪些模板生效
+  - `forVars[]` 可设置对哪些变量值生效
+    - `var`：变量名
+    - `op` 比较操作符
+      - `==`：等于
+      - `!=`：不等于
+      - `>`：大于
+      - `<`：小于
+      - `>=`：大于等于
+      - `<=`：小于等于
+      - `in`：在数组中
+      - `nin`：不在数组中
+    - `value`：比较值
   - `default`：默认值
   - `required`：是否必填项
   - `title`：鼠标放置后显示的提示内容
@@ -290,11 +309,15 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 
 ## 6、发布说明
 
-### 1.0.6（未发布）
-- 修复模板utils.js重复导入java import的问题；
+### 1.0.6
+
+- 修复模板 utils.js 重复导入 java import 的问题；
 - 完善`ui.labelWidth`，取值`1~30`；
+- 支持显示已勾选项目；
+- 增加 `forVars` 参数，用于控制`ui.params`组件是否显示；
 
 ### 1.0.5
+
 - 修复参数为空的问题
 
 ### 1.0.4

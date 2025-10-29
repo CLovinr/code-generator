@@ -7,7 +7,7 @@
     "dev:webview": "pnpm -F webview-view dev",
     "build:webview": "pnpm -F webview-view build",
     "watch:extension": "pnpm -F code-generator-dusk watch",
-    "watch:webview": "pnpm -F webview-view watch",
+    "watch:webview": "pnpm build:webview && pnpm -F webview-view watch",
     "watch": "npm-run-all -p watch:extension watch:webview",
     "clean": "rimraf ./packages/code-generator-dusk/dist",
     "copy:info-files": "cpx ./LICENSE.txt ./packages/code-generator-dusk/ && cpx ./README.md ./packages/code-generator-dusk/ && cpx ./CHANGELOG.md ./packages/code-generator-dusk/ && cpx ./docs/**/* ./packages/code-generator-dusk/docs/",

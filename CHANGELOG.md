@@ -6,6 +6,13 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 发布说明
 
+### 1.0.6
+
+- 修复模板 utils.js 重复导入 java import 的问题；
+- 完善`ui.labelWidth`，取值`1~30`；
+- 支持显示已勾选项目；
+- 增加 `forVars` 参数，用于控制`ui.params`组件是否显示；
+
 ### 1.0.5
 
 - 修复参数为空的问题

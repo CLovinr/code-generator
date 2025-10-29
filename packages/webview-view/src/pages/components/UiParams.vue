@@ -144,6 +144,35 @@ const isReady = computed(() => {
   return Object.keys(uiValues.value).length > 0;
 });
 
+const isVarMatch = (forVars: any[], values: any) => {
+  try {
+    for (const varItem of forVars) {
+      const v = values[varItem.var];
+      switch (varItem.op) {
+        case "==":
+          return v === varItem.value;
+        case "!=":
+          return v !== varItem.value;
+        case ">":
+          return v > varItem.value;
+        case ">=":
+          return v >= varItem.value;
+        case "<":
+          return v < varItem.value;
+        case "<=":
+          return v <= varItem.value;
+        case "in":
+          return varItem.value?.includes(v);
+        case "nin":
+          return !varItem.value?.includes(v);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+};
+
 const enabledUIParams = computed(() => {
   const params: any = [];
   if (props.uiParams) {
@@ -152,7 +181,8 @@ const enabledUIParams = computed(() => {
         p.enable !== false &&
         (!props.templateName ||
           !p.forTemplates ||
-          p.forTemplates.includes(props.templateName))
+          p.forTemplates.includes(props.templateName)) &&
+        (!p.forVars || isVarMatch(p.forVars, modelValue.value))
       ) {
         params.push(p);
       }
