@@ -290,16 +290,18 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
       - `maxlength`：最大输入字符数
   - `forTemplates` 可设置对哪些模板生效
   - `forVars[]` 可设置对哪些变量值生效
-    - `var`：变量名
+    - `var`：变量名，支持嵌套变量，如：`prop1.entity`
     - `op` 比较操作符
-      - `==`：等于
-      - `!=`：不等于
-      - `>`：大于
-      - `<`：小于
-      - `>=`：大于等于
-      - `<=`：小于等于
-      - `in`：在数组中
-      - `nin`：不在数组中
+      - `==`：`var`对应的值等于`value`
+      - `!=`：`var`对应的值不等于`value`
+      - `>`：`var`对应的值大于`value`
+      - `<`：`var`对应的值小于`value`
+      - `>=`：`var`对应的值大于等于`value`
+      - `<=`：`var`对应的值小于等于`value`
+      - `in`：`var`对应的值在数组`value`中
+      - `nin`：`var`对应的值不在数组`value`中
+      - `contains`：`var`对应的数组包含元素`var`
+      - `not-contains`：`var`对应的数组不包含元素`var`
     - `value`：比较值
   - `default`：默认值
   - `required`：是否必填项
@@ -308,6 +310,12 @@ Visual Studio Code 代码生成器插件（地址：[code generator dusk](https:
 ## 5、已知问题
 
 ## 6、发布说明
+
+### 1.0.7
+
+- 减少词法分析栈溢出的问题；
+- `forVars[].op`增加：`contains`与`not-contains`；
+- `forVars[].var`支持嵌套变量，用于`checkbox`组件值的匹配；
 
 ### 1.0.6
 

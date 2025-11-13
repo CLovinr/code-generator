@@ -6,6 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## 发布说明
 
+### 1.0.7
+
+- 减少词法分析栈溢出的问题；
+- `forVars[].op`增加：`contains`与`not-contains`；
+- `forVars[].var`支持嵌套变量，用于`checkbox`组件值的匹配；
+
 ### 1.0.6
 
 - 修复模板 utils.js 重复导入 java import 的问题；

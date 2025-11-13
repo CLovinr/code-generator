@@ -144,10 +144,21 @@ const isReady = computed(() => {
   return Object.keys(uiValues.value).length > 0;
 });
 
+function getSubValue(values: any, varName: string) {
+  const subVars = varName.split(".");
+  let v = undefined;
+  let value = values;
+  for (const subVar of subVars) {
+    value = value?.[subVar];
+  }
+
+  return value;
+}
+
 const isVarMatch = (forVars: any[], values: any) => {
   try {
     for (const varItem of forVars) {
-      const v = values[varItem.var];
+      const v = getSubValue(values, varItem.var);
       switch (varItem.op) {
         case "==":
           return v === varItem.value;
@@ -165,6 +176,10 @@ const isVarMatch = (forVars: any[], values: any) => {
           return varItem.value?.includes(v);
         case "nin":
           return !varItem.value?.includes(v);
+        case "contains":
+          return v?.includes(varItem.value);
+        case "not-contains":
+          return !v?.includes(varItem.value);
       }
     }
   } catch (e) {

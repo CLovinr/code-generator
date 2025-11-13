@@ -17,10 +17,14 @@ class Lexer1 {
   }
 
   public analyze() {
-    this.goNext(this.start);
-    if (this.cache.length) {
-      this.newPartAndNext(Lexer1_TYPE_STRING);
+    while (this.index <= this.content.length) {
+      this.goNext(this.start);
     }
+
+    if (this.cache.length) {
+      this.newPart(Lexer1_TYPE_STRING);
+    }
+
     this._length = this.parts.length;
   }
 
@@ -63,7 +67,7 @@ class Lexer1 {
    * @param {Object} type
    * @param {Object} backStep 回退的步数
    */
-  private newPartAndNext(type: string, backStep: number = 0) {
+  private newPart(type: string, backStep: number = 0) {
     if (backStep) {
       this.index -= backStep;
       this.cache.splice(this.cache.length - backStep, backStep);
@@ -76,7 +80,7 @@ class Lexer1 {
 
     this.cache = [];
     this.parts.push(part);
-    this.goNext(this.start);
+
     return part;
   }
 
@@ -121,19 +125,19 @@ class Lexer1 {
   }
 
   private state3_effect() {
-    this.newPartAndNext(Lexer1_TYPE1);
+    this.newPart(Lexer1_TYPE1);
   }
 
   private state4_effect() {
-    this.newPartAndNext(Lexer1_TYPE2);
+    this.newPart(Lexer1_TYPE2);
   }
 
   private state5_effect() {
-    this.newPartAndNext(Lexer1_TYPE3);
+    this.newPart(Lexer1_TYPE3);
   }
 
   private state6_effect() {
-    this.newPartAndNext(Lexer1_TYPE4, 1);
+    this.newPart(Lexer1_TYPE4, 1);
   }
 
   private state7() {
@@ -148,7 +152,7 @@ class Lexer1 {
   }
 
   private state8_effect() {
-    this.newPartAndNext(Lexer1_TYPE_STRING, 1);
+    this.newPart(Lexer1_TYPE_STRING, 1);
   }
 
   private state9() {
@@ -160,7 +164,7 @@ class Lexer1 {
   }
 
   private state10_effect() {
-    this.newPartAndNext(Lexer1_TYPE5);
+    this.newPart(Lexer1_TYPE5);
   }
 }
 
@@ -188,7 +192,9 @@ class LexerConfig {
   }
 
   public analyze() {
-    this.goNext(this.start);
+    while (this.index <= this.content.length) {
+      this.goNext(this.start);
+    }
     this._length = this.parts.length;
   }
 
@@ -221,7 +227,7 @@ class LexerConfig {
    * @param {Object} type
    * @param {Object} backStep backStep 为0或undefined表示push当前字符到cache、并把index增加1，否则表示回退
    */
-  private newPartAndNext(
+  private newPart(
     type: string | undefined,
     backStep: number | undefined = 0,
     ignore: boolean = false
@@ -244,7 +250,7 @@ class LexerConfig {
       this.parts.push(part);
     }
     this.cache = [];
-    this.goNext(this.start);
+
     return part;
   }
 
@@ -290,7 +296,7 @@ class LexerConfig {
   }
 
   private state3_effect() {
-    this.newPartAndNext(LexerConfig_TYPE_VALUE);
+    this.newPart(LexerConfig_TYPE_VALUE);
   }
 
   private state4() {
@@ -302,20 +308,20 @@ class LexerConfig {
   }
 
   private state5_effect() {
-    this.newPartAndNext(LexerConfig_TYPE_VALUE);
+    this.newPart(LexerConfig_TYPE_VALUE);
   }
 
   private state6_effect() {
-    this.newPartAndNext(LexerConfig_TYPE_ATTR, 1);
+    this.newPart(LexerConfig_TYPE_ATTR, 1);
   }
 
   private state7_effect() {
-    this.newPartAndNext(LexerConfig_TYPE_EQ);
+    this.newPart(LexerConfig_TYPE_EQ);
   }
 
   private state8_effect() {
     //忽略
-    this.newPartAndNext(undefined, undefined, true);
+    this.newPart(undefined, undefined, true);
   }
 }
 
@@ -364,9 +370,12 @@ class Lexer2 {
   }
 
   public analyze() {
-    this.goNext(this.start);
+    while (this.index <= this.lexer1.length) {
+      this.goNext(this.start);
+    }
+
     if (this.cache.length) {
-      this.newPartAndNext(TYPE_CONTENT);
+      this.newPart(TYPE_CONTENT);
     }
     this._length = this.parts.length;
   }
@@ -401,7 +410,7 @@ class Lexer2 {
    * @param {Object} type
    * @param {Object} backStep backStep 为0或undefined表示push当前字符到cache、并把index增加1，否则表示回退
    */
-  private newPartAndNext(type: string, backStep: number = 0) {
+  private newPart(type: string, backStep: number = 0) {
     if (backStep) {
       this.index -= backStep;
       this.cache.splice(this.cache.length - backStep, backStep);
@@ -422,7 +431,6 @@ class Lexer2 {
     };
     this.cache = [];
     this.parts.push(part);
-    this.goNext(this.start);
     return part;
   }
 
@@ -519,20 +527,20 @@ class Lexer2 {
   }
 
   private state5_effect() {
-    this.newPartAndNext(TYPE_LOCAL);
+    this.newPart(TYPE_LOCAL);
   }
 
   private state6_effect() {
-    this.newPartAndNext(TYPE_GLOBAL);
+    this.newPart(TYPE_GLOBAL);
   }
 
   private state7_effect() {
-    let part = this.newPartAndNext(TYPE_SET);
+    let part = this.newPart(TYPE_SET);
     part.value && (part.value = part.value.trim());
   }
 
   private state8_effect() {
-    let part = this.newPartAndNext(TYPE_CONFIG);
+    let part = this.newPart(TYPE_CONFIG);
     let lc = new LexerConfig(part.value);
     lc.analyze();
     let attrs: any = {};
@@ -565,7 +573,7 @@ class Lexer2 {
   }
 
   private state10_effect() {
-    this.newPartAndNext(TYPE_CONTENT, 1);
+    this.newPart(TYPE_CONTENT, 1);
   }
 }
 
